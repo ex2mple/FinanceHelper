@@ -33,9 +33,9 @@
                 class="w-full"
                 :class="{'p-invalid': form.name?.invalid}"
               />
-              <small v-if="form.name?.invalid" class="p-error">
+              <Message v-if="form.name?.invalid" severity="error" class="mt-2">
                 {{ form.name.error.message }}
-              </small>
+              </Message>
             </div>
             
             <!-- Сумма -->
@@ -50,9 +50,9 @@
                 class="w-full"
                 :class="{'p-invalid': form.amount?.invalid}"
               />
-              <small v-if="form.amount?.invalid" class="p-error">
+              <Message v-if="form.amount?.invalid" severity="error" class="mt-2">
                 {{ form.amount.error.message }}
-              </small>
+              </Message>
             </div>
             
             <!-- Категория -->
@@ -81,9 +81,9 @@
                   </div>
                 </template>
               </Dropdown>
-              <small v-if="form.category?.invalid" class="p-error">
+              <Message v-if="form.category?.invalid" severity="error" class="mt-2">
                 {{ form.category.error.message }}
-              </small>
+              </Message>
             </div>
             
             <!-- Дата и время -->
@@ -100,9 +100,9 @@
                 :maxDate="maxDate"
                 placeholder="Выберите дату и время"
               />
-              <small v-if="form.datetime?.invalid" class="p-error">
+              <Message v-if="form.datetime?.invalid" severity="error" class="mt-2">
                 {{ form.datetime.error.message }}
-              </small>
+              </Message>
             </div>
             
             <!-- Описание -->
