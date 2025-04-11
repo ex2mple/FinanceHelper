@@ -53,7 +53,7 @@ const onSubmit = async (data: any) => {
     class="flex min-h-screen w-full items-center justify-center p-4"
   >
     <Card
-      class="animate-fadein w-full max-w-md backdrop-blur-md shadow-lg border-0"
+      class="animate-fadein w-full max-w-md backdrop-blur-md shadow-lg border-0 "
     >
       <template #title>
         <h1 class="text-3xl font-medium text-center mb-4">Добро пожаловать</h1>
@@ -107,7 +107,6 @@ const onSubmit = async (data: any) => {
               type="submit"
               label="Войти"
               class="w-full"
-              rounded
               :loading="!!form.isSubmitting"
             />
           </div>
@@ -128,7 +127,6 @@ const onSubmit = async (data: any) => {
           <Button
             type="button"
             class="w-full p-button-secondary"
-            rounded
             @click="redirectToYandexAuth"
           >
             <div class="flex items-center justify-center gap-2">

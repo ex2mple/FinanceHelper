@@ -143,7 +143,6 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
                 ]" 
                 optionLabel="label" 
                 optionValue="value"
-                class="w-full"
                 :class="{'p-invalid': form.gender?.invalid}"
               />
             </div>
@@ -176,7 +175,6 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
               type="submit"
               label="Зарегистрироваться"
               class="w-full"
-              rounded
               :loading="!!form.isSubmitting"
             />
           </div>
@@ -197,7 +195,6 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
           <Button
             type="button"
             class="w-full p-button-secondary"
-            rounded
             @click="redirectToYandexAuth"
           >
             <div class="flex items-center justify-center gap-2">
