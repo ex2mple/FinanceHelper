@@ -7,9 +7,8 @@ from .dependencies import user_by_id, user_by_username
 from ..auth.security import get_password_hash
 from ..auth.views import user_dependency
 import os.path
+
 router = APIRouter(tags=["Users"])
-AVATARS_DIR = os.path.abspath('media/users_images/')
-DEFAULT_PHOTO = os.path.join(AVATARS_DIR, "default.png")
 
 
 @router.post(
@@ -48,9 +47,9 @@ async def get_user(
     return user
 
 
-# @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-# async def delete_user(
-#     user: schemas.UserBase = Depends(user_by_id),
-#     session: AsyncSession = Depends(db_helper.session_dependency),
-# ) -> None:
-#     await crud.delete_user(session=session, user=user)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+        current_user: user_dependency,
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> None:
+    await crud.delete_user(session=session, user=current_user)

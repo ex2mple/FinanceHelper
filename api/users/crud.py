@@ -47,8 +47,12 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
 async def self_update_user(
         session: AsyncSession, user: User, data: UserSelfUpdate
 ) -> None:
-    if data.bio:
-        user.bio = data.bio
+    if data.gender:
+        user.gender = data.gender
+    if data.age:
+        user.age = data.age
+    if data.salary:
+        user.salary = data.salary
     if data.password:
         user.password = get_password_hash(data.password)
     await session.commit()
