@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
-from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction
+from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction, \
+    get_filtered_transactions, get_filtered_transactions_grouped
 from core.models import db_helper, User, Category
 from typing import Optional
 
@@ -98,3 +101,59 @@ async def delete_transaction_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
 
     await delete_transaction(session=session, transaction=transaction)
+
+
+@router.get("/filter", response_model=list[TransactionBase])
+async def get_filtered_transactions_api(
+    user_id: Optional[int] = None,
+    order_by: str = Query(default="asc", regex="^(asc|desc)$"),
+    limit: Optional[int] = Query(default=None, ge=0),
+    offset: Optional[int] = Query(default=None, ge=0),
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[TransactionBase]:
+    """
+    Получение списка транзакций с фильтрацией и сортировкой.
+    """
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_date must be less than or equal to end_date",
+        )
+
+    transactions = await get_filtered_transactions(
+        session=session,
+        user_id=user_id,
+        order_by=order_by,
+        limit=limit,
+        offset=offset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
+
+
+@router.get("/group", response_model=list[tuple[str, float | int]])
+async def get_filtered_transactions_grouped_api(
+    user_id: Optional[int] = None,
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[tuple[str, float | int]]:
+    """
+    Получение списка транзакций с фильтрацией и группировкой по id.
+    """
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_date must be less than or equal to end_date",
+        )
+
+    transactions = await get_filtered_transactions_grouped(
+        session=session,
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
