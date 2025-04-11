@@ -1,5 +1,5 @@
 <template>
-  <div class="text-white p-4 min-h-screen font-sans">
+  <div class="p-4 min-h-screen font-sans">
     <!-- Верхняя панель: Месяц и Фильтры -->
     <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
       <div class="flex items-center gap-2">
@@ -10,7 +10,7 @@
             optionLabel="label"
             optionValue="value"
             placeholder="Выберите месяц"
-            class="w-[150px] md:w-[180px] !text-sm !bg-gray-700 !border-gray-600"
+            class="w-[150px] md:w-[180px]"
         />
       </div>
     </div>
@@ -19,29 +19,36 @@
     <div class="grid grid-cols-2 gap-4 mb-6">
        <!-- Карточка Траты -->
        <Card
-          class="!bg-surface-50 dark:!bg-surface-800 !rounded-lg !shadow-none hover:bg-surface-100 dark:hover:bg-surface-700/50 cursor-pointer transition duration-150 overflow-hidden"
+          class="cursor-pointer transition duration-150 overflow-hidden hover-def"
           @click="onSummaryClick('expenses')"
-          :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }"
+          :pt="{ 
+            root: { class: 'hover:surface-hover' },
+            body: { class: 'p-0' }, 
+            content: { class: 'p-0' } 
+          }"
        >
          <template #content>
           <div class="p-4">
-             <div class="text-lg font-semibold text-surface-700 dark:text-surface-0/80 dark:text-red-400">{{ totalExpensesFormatted }}</div>
-             <div class="text-sm text-surface-500 dark:text-surface-400">Траты</div>
+             <div class="text-lg font-semibold text-danger">{{ totalExpensesFormatted }}</div>
+             <div class="text-sm text-color-secondary">Траты</div>
           </div>
          </template>
-
        </Card>
 
        <!-- Карточка Доходы -->
        <Card
-          class="!bg-surface-50 dark:!bg-surface-800 !rounded-lg !shadow-none hover:bg-surface-100 dark:hover:bg-surface-700/50 cursor-pointer transition duration-150 overflow-hidden"
+          class="cursor-pointer transition duration-150 overflow-hidden hover-def"
           @click="onSummaryClick('income')"
-          :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }"
+          :pt="{ 
+            root: { class: 'hover:surface-hover' },
+            body: { class: 'p-0' }, 
+            content: { class: 'p-0' } 
+          }"
        >
          <template #content>
          <div class="p-4">
-            <div class="text-lg font-semibold text-green-500 dark:text-green-400">{{ totalIncomeFormatted }}</div>
-            <div class="text-sm text-surface-500 dark:text-surface-400">Доходы</div>
+            <div class="text-lg font-semibold text-success">{{ totalIncomeFormatted }}</div>
+            <div class="text-sm text-color-secondary">Доходы</div>
          </div>
          </template>
        </Card>
@@ -52,21 +59,24 @@
       <Card
           v-for="(transactionsInGroup, dateKey) in groupedTransactions"
           :key="dateKey"
-          class="!shadow-none !rounded-lg"
-          :pt="{ header: { class: '!p-3 !border-b !border-gray-700' }, body: { class: '!p-0' }, content: { class: '!p-0' } }"
+          :pt="{ 
+            header: { class: 'p-3 border-bottom-1' }, 
+            body: { class: 'p-0' }, 
+            content: { class: 'p-0'} 
+          }"
       >
         <template #header>
           <div class="flex justify-between items-center">
-            <h2 class="text-base font-semibold text-gray-300">{{ dateKey }}</h2>
-            <span class="text-sm text-gray-500 font-medium">{{ calculateDailyTotal(transactionsInGroup) }}</span>
+            <h2 class="text-base font-semibold">{{ dateKey }}</h2>
+            <span class="text-sm text-color-secondary font-medium">{{ calculateDailyTotal(transactionsInGroup) }}</span>
           </div>
         </template>
         <template #content>
-          <ul class="divide-y divide-gray-700">
+          <ul class="divide-y-1">
             <li
                 v-for="transaction in transactionsInGroup"
                 :key="transaction.id"
-                class="flex items-center justify-between p-3 hover:bg-gray-700/50 cursor-pointer transition duration-150 ease-in-out"
+                class="flex items-center justify-between p-3 cursor-pointer hover-def transition duration-150 ease-in-out"
                 @click="onTransactionClick(transaction)"
             >
               <div class="flex items-center overflow-hidden mr-2">
@@ -74,13 +84,13 @@
                 <Avatar
                     :image="transaction.iconUrl"
                     :label="!transaction.iconUrl ? transaction.name.charAt(0) : undefined"
-                    :class="['!h-10 !w-10 mr-3 flex-shrink-0', getIconBgClass(transaction.category)]"
+                    :class="['h-10 w-10 mr-3 flex-shrink-0', getIconBgClass(transaction.category)]"
                     shape="circle"
                 />
                 <!-- Детали -->
                 <div class="overflow-hidden">
                   <div class="font-medium text-sm truncate">{{ transaction.name }}</div>
-                  <div class="text-xs text-gray-400 truncate">{{ transaction.category }}</div>
+                  <div class="text-xs text-color-secondary truncate">{{ transaction.category }}</div>
                 </div>
               </div>
               <!-- Сумма и доп. инфо -->
@@ -88,16 +98,16 @@
                 <div
                     :class="[
                         'font-semibold text-sm',
-                        transaction.amount > 0 ? 'text-green-400' : 'text-white'
+                        transaction.amount > 0 ? 'text-success' : 'text-color'
                         ]"
                 >
                   {{ formatAmount(transaction.amount) }}
                 </div>
                 <div v-if="transaction.details || transaction.bonus"
-                     class="text-xs text-gray-500 mt-0.5 flex justify-end items-center gap-1">
+                     class="text-xs text-color-secondary mt-0.5 flex justify-end items-center gap-1">
                   <!-- Пример отображения бонусов или деталей -->
 <!--                  <Tag v-if="transaction.bonus" :value="`+${transaction.bonus}`" severity="warning"-->
-<!--                       class="!text-[10px] !px-1 !py-0"></Tag>-->
+<!--                       class="text-[10px] px-1 py-0"></Tag>-->
 <!--                  <span class="truncate">{{ transaction.details }}</span>-->
                 </div>
               </div>
@@ -106,7 +116,7 @@
         </template>
       </Card>
     </div>
-    <div v-else class="text-center text-gray-500 mt-10">
+    <div v-else class="text-center text-color-secondary mt-10">
       Нет транзакций за выбранный период.
     </div>
   </div>
@@ -223,14 +233,14 @@ const formatDateGroup = (dateString) => {
 // Получение CSS класса для фона иконки
 const getIconBgClass = (category) => {
   const colors = {
-    'Супермаркеты': '!bg-pink-600',
-    'Переводы': '!bg-yellow-500 !text-gray-900', // Пример с темным текстом
-    'Транспорт': '!bg-blue-600',
-    'Фастфуд': '!bg-orange-500',
-    'Местный транспорт': '!bg-red-700',
-    'Доходы': '!bg-emerald-500',
+    'Супермаркеты': 'bg-pink-500',
+    'Переводы': 'bg-yellow-500 text-gray-900', // Пример с темным текстом
+    'Транспорт': 'bg-primary',
+    'Фастфуд': 'bg-orange-500',
+    'Местный транспорт': 'bg-red-600',
+    'Доходы': 'bg-green-500',
   };
-  return colors[category] || '!bg-gray-600'; // Цвет по умолчанию
+  return colors[category] || 'bg-surface-500'; // Цвет по умолчанию
 };
 
 const calculateDailyTotal = (dailyTransactions) => {
@@ -313,52 +323,18 @@ const groupedTransactions = computed(() => {
 </script>
 
 <style>
-/* Глобальные стили для кастомизации PrimeVue, если нужно */
-/* Например, чтобы Dropdown лучше вписывался в темную тему */
-.p-dropdown {
-  background: #374151; /* bg-gray-700 */
-  border: 1px solid #4b5563; /* border-gray-600 */
-}
-
-.p-dropdown .p-dropdown-label {
-  color: #d1d5db; /* text-gray-300 */
-}
-
-.p-dropdown .p-dropdown-trigger .p-icon {
-  color: #9ca3af; /* text-gray-400 */
-}
-
-.p-dropdown-panel {
-  background: #1f2937; /* bg-gray-800 */
-  border: 1px solid #4b5563; /* border-gray-600 */
-}
-
-.p-dropdown-item {
-  color: #d1d5db; /* text-gray-300 */
-}
-
-.p-dropdown-item:hover {
-  background: #374151; /* bg-gray-700 */
-}
-
-.p-dropdown-item.p-highlight {
-  background: #1d4ed8; /* bg-blue-700 */
-  color: white;
-}
-
-/* Стили для Card */
-.p-card .p-card-content {
-  padding: 0 !important; /* Убираем лишние паддинги у контента карты */
-}
-
-.p-card .p-card-body {
-  padding: 0 !important; /* Убираем лишние паддинги у тела карты */
-}
-
 /* Убираем стандартные маркеры списка */
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
+.hover-def:hover {
+  background-color: var(--p-content-hover-background) !important;
+
+}
+
+/* PrimeVue теперь управляет цветами через собственную систему тем */
+/* Удалены хардкодированные цветовые стили, так как они теперь берутся из системы тем PrimeVue */
 </style>
