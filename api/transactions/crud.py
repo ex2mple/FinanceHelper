@@ -7,6 +7,7 @@ from .schemas import TransactionCreate, TransactionSelfUpdate
 from sqlalchemy import func
 
 from ..categories.crud import get_category
+from ..utils.datetime_utils import make_timezone_aware
 
 
 async def create_transaction(session: AsyncSession, transaction_in: TransactionCreate) -> Transaction:
@@ -78,8 +79,10 @@ async def get_filtered_transactions(
 
     # Фильтрация по дате
     if start_date is not None:
+        start_date = make_timezone_aware(start_date)
         stmt = stmt.where(Transaction.datetime >= start_date)
     if end_date is not None:
+        end_date = make_timezone_aware(end_date)
         stmt = stmt.where(Transaction.datetime <= end_date)
 
     # Применение offset и limit
@@ -106,8 +109,10 @@ async def get_filtered_transactions_grouped(
 
     # Фильтрация по дате
     if start_date is not None:
+        start_date = make_timezone_aware(start_date)
         stmt = stmt.where(Transaction.datetime >= start_date)
     if end_date is not None:
+        end_date = make_timezone_aware(end_date)
         stmt = stmt.where(Transaction.datetime <= end_date)
 
     # Группировка по category_id
