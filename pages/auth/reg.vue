@@ -12,6 +12,14 @@ definePageMeta({
 
 const resolver = yupResolver(createUserSchema)
 const toast = useToast()
+const departments = ref([
+  { name: 'Engineering', code: 'engineering' },
+  { name: 'Marketing', code: 'marketing' },
+  { name: 'Finance', code: 'finance' },
+  { name: 'Human Resources', code: 'hr' },
+  { name: 'Sales', code: 'sales' },
+  { name: 'Operations', code: 'operations' }
+])
 
 const redirectToYandexAuth = () => {
   window.location.href = `${API}/yandex/login`
@@ -50,99 +58,159 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
 </script>
 
 <template>
-  <Toast></Toast>
+  <Toast position="top-right" />
   <div
-    class="h-100 flex w-screen items-center justify-center overflow-auto bg-[linear-gradient(-225deg,var(--p-primary-500),var(--p-primary-700)_48%,var(--p-primary-800))] px-6 py-20 md:px-12 lg:px-20 dark:bg-[linear-gradient(-225deg,var(--p-primary-400),var(--p-primary-600)_48%,var(--p-primary-800))]"
+    class="flex min-h-screen w-full items-center justify-center p-4"
   >
-    <Form
-      @submit="onSubmit"
-      v-slot="form"
-      :resolver="resolver"
-      :validateOnValueUpdate="false"
-      :validateOnBlur="true"
-      class="animate-fadein rounded-xl bg-[rgba(255,255,255,0.1)] p-12 text-center shadow backdrop-blur-md lg:w-[30rem]"
+    <Card
+      class="animate-fadein w-full max-w-md backdrop-blur-md shadow-lg border-0"
     >
-      <div class="mb-12 text-4xl font-medium text-white">Добро пожаловать</div>
-      <div class="mb-6">
-        <InputText
-          type="text"
-          name="email"
-          class="!block !w-full !appearance-none !rounded-full !bg-white/10 !p-4 !text-xl placeholder:!text-white/40"
-          placeholder="Email"
-        />
-        <Message
-          v-if="form.email?.invalid"
-          size="small"
-          severity="error"
-          variant="simple"
-          class="ml-4"
+      <template #title>
+        <h1 class="text-3xl font-medium text-center mb-4">Добро пожаловать</h1>
+      </template>
+      <template #content>
+        <Form
+          @submit="onSubmit"
+          v-slot="form"
+          :resolver="resolver"
+          :validateOnValueUpdate="false"
+          :validateOnBlur="true"
+          class="space-y-4"
         >
-          {{ form.email.error.message }}
-        </Message>
-      </div>
-      <div class="mb-6">
-        <InputText
-          type="text"
-          name="first_name"
-          class="!block !w-full !appearance-none !rounded-full !bg-white/10 !p-4 !text-xl placeholder:!text-white/40"
-          placeholder="Ваше имя"
-        />
-        <Message
-          v-if="form.first_name?.invalid"
-          size="small"
-          severity="error"
-          variant="simple"
-          class="ml-4"
-        >
-          {{ form.first_name.error.message }}
-        </Message>
-      </div>
-      <div class="mb-6">
-        <Password
-          toggleMask
-          :feedback="false"
-          name="password"
-          inputClass="!appearance-none placeholder:!text-white/40 !p-4 !w-full !outline-0 !text-xl !bg-white/10 !rounded-full"
-          class="w-full"
-          placeholder="Пароль"
-        />
-        <Message
-          v-if="form.password?.invalid"
-          size="small"
-          severity="error"
-          variant="simple"
-          class="ml-4"
-        >
-          {{ form.password.error.message }}
-        </Message>
-      </div>
+          <div>
+            <span class="flex flex-col gap-1">
+              <label for="email">Email</label>
+              <InputText
+                id="email"
+                type="text"
+                name="email"
+                class="w-full rounded-lg p-input-filled"
+                :class="{'p-invalid': form.email?.invalid}"
+              />
+            </span>
+            <Message v-if="form.email?.invalid" severity="error" class="mt-2">
+              {{ form.email.error.message }}
+            </Message>
+          </div>
 
-      <button
-        type="submit"
-        class="max-w-50 mb-4 w-full cursor-pointer appearance-none rounded-full border-0 bg-white/30 p-4 text-xl font-medium text-white/80 outline-0 transition-colors duration-150 hover:bg-white/40 active:bg-white/20"
-      >
-        Зарегистрироваться
-      </button>
-      <NuxtLink
-        to="/auth/login"
-        class="mb-4 block cursor-pointer text-center font-medium text-white hover:underline"
-        >Уже есть аккаунт</NuxtLink
-      >
-      <hr class="mx-auto mb-2 h-1 w-48 rounded-sm border-0 bg-gray-100" />
-      <span class="!text-white/40">или</span>
-      <button
-        type="button"
-        @click="redirectToYandexAuth"
-        class="max-w-50 mt-4 w-full cursor-pointer appearance-none rounded-full border-0 bg-white/30 p-4 text-xl font-medium text-white/80 outline-0 transition-colors duration-150 hover:bg-white/40 active:bg-white/20"
-      >
-        <div class="flex items-center justify-center gap-4">
-          <img src="/assets/YaLogo.svg" width="30px" height="30px" alt="Логотип Яндекса" /> Войти
-          через Яндекс
-        </div>
-      </button>
-    </Form>
+          <div>
+            <span class="flex flex-col gap-1">
+              <label for="first_name">Ваше имя</label>
+              <InputText
+                id="first_name"
+                type="text"
+                name="first_name"
+                class="w-full  rounded-lg p-input-filled"
+                :class="{'p-invalid': form.first_name?.invalid}"
+              />
+            </span>
+            <Message v-if="form.first_name?.invalid" severity="error" class="mt-2">
+              {{ form.first_name.error.message }}
+            </Message>
+          </div>
+
+          <div>
+            <span class="flex flex-col gap-1">
+              <label for="password">Пароль</label>
+              <Password
+                id="password"
+                name="password"
+                toggleMask
+                :feedback="true"
+                class="w-full"
+                inputClass="w-full  rounded-lg p-input-filled"
+                :class="{'p-invalid': form.password?.invalid}"
+                :weakLabel="'Слабый'"
+                :mediumLabel="'Средний'"
+                :strongLabel="'Сильный'"
+                :inputStyle="{ width: '100%' }"
+              />
+            </span>
+            <Message v-if="form.password?.invalid" severity="error" class="mt-2">
+              {{ form.password.error.message }}
+            </Message>
+          </div>
+
+          <div>
+            <label for="gender" class="block text-white mb-1">Пол</label>
+            <div class="flex justify-content-center">
+              <SelectButton 
+                id="gender"
+                name="gender" 
+                :options="[
+                  { label: 'Мужской', value: 'male' },
+                  { label: 'Женский', value: 'female' },
+                ]" 
+                optionLabel="label" 
+                optionValue="value"
+                class="w-full"
+                :class="{'p-invalid': form.gender?.invalid}"
+              />
+            </div>
+            <Message v-if="form.gender?.invalid" severity="error" class="mt-2">
+              {{ form.gender.error.message }}
+            </Message>
+          </div>
+
+          <div>
+            <span class="flex flex-col gap-1">
+              <label for="salary">Зарплата</label>
+              <InputNumber
+                id="salary"
+                name="salary"
+                mode="currency"
+                currency="RUB"
+                locale="ru-RU"
+                class="w-full  rounded-lg p-input-filled"
+                :class="{'p-invalid': form.salary?.invalid}"
+                :min="0"
+              />
+            </span>
+            <Message v-if="form.salary?.invalid" severity="error" class="mt-2">
+              {{ form.salary.error.message }}
+            </Message>
+          </div>
+
+          <div class="pt-4">
+            <Button
+              type="submit"
+              label="Зарегистрироваться"
+              class="w-full"
+              rounded
+              :loading="!!form.isSubmitting"
+            />
+          </div>
+
+          <div class="text-center">
+            <NuxtLink
+              to="/auth/login"
+              class="text-white hover:underline font-medium"
+            >
+              Уже есть аккаунт
+            </NuxtLink>
+          </div>
+
+          <Divider align="center">
+            <span class="text-white/60 px-2">или</span>
+          </Divider>
+
+          <Button
+            type="button"
+            class="w-full p-button-secondary"
+            rounded
+            @click="redirectToYandexAuth"
+          >
+            <div class="flex items-center justify-center gap-2">
+              <img src="/assets/YaLogo.svg" width="24" height="24" alt="Логотип Яндекса" />
+              <span class="flex flex-col gap-1">Войти через Яндекс</span>
+            </div>
+          </Button>
+        </Form>
+      </template>
+    </Card>
   </div>
 </template>
+
 <style scoped>
 .animate-fadein {
   animation: fadeIn 0.7s ease-out;
@@ -151,7 +219,7 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(50px);
+    transform: translateY(30px);
   }
 
   to {
