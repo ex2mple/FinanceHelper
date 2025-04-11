@@ -3,7 +3,7 @@ from api.users import schemas, crud
 from core.models import db_helper, User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import JSONResponse
-from .dependencies import user_by_id, user_by_username
+from .dependencies import user_by_id, user_by_username, user_by_email
 from ..auth.security import get_password_hash
 from ..auth.views import user_dependency
 import os.path
@@ -32,17 +32,12 @@ async def self_user_update(
         current_user: user_dependency,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> None:
-    if data.username and current_user.balance < 5000:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Not enough money to change the nickname",
-        )
     await crud.self_update_user(session=session, user=current_user, data=data)
 
 
 @router.get("/{username}", response_model=schemas.UserBase)
 async def get_user(
-        user: User = Depends(user_by_username),
+        user: User = Depends(user_by_email),
 ) -> schemas.UserBase:
     return user
 

@@ -27,3 +27,14 @@ async def user_by_username(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     return user
+
+async def user_by_email(
+        email: Annotated[str, Path],
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> User:
+    user: User = await crud.get_user_by_email(session=session, email=email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    return user

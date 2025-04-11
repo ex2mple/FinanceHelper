@@ -8,7 +8,7 @@ from jwt.exceptions import InvalidTokenError
 
 from core.models import db_helper, User
 from sqlalchemy.ext.asyncio import AsyncSession
-from api.users.crud import get_user_by_username
+from api.users.crud import get_user_by_username, get_user_by_email
 from .schemas import Token, TokenData
 from api.users.schemas import UserBase
 from .security import verify_password
@@ -39,13 +39,13 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
-    user = await get_user_by_username(session, username=token_data.username)
+    user = await get_user_by_email(session, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
@@ -67,8 +67,8 @@ async def create_access_token(data: dict, expires_delta: int | None = None) -> s
     return encoded_jwt
 
 
-async def authenticate_user(session, username: str, password: str) -> User | bool:
-    user: User = await get_user_by_username(session, username)
+async def authenticate_user(session, email: str, password: str) -> User | bool:
+    user: User = await get_user_by_email(session, email)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -94,7 +94,7 @@ async def login_for_access_token(
         )
     remember = (await request.form()).get("remember") == 'true'
     access_token = await create_access_token(
-        data={"sub": user.username},
+        data={"sub": user.email},
         expires_delta=ACCESS_TOKEN_EXPIRE_DAYS if remember else None,
     )
     expires = (

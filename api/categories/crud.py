@@ -18,10 +18,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
         .order_by(Category.name)
     )
     categories_all = (await session.scalars(stmt)).all()
-    res = []
-    for i in categories_all:
-        res.append(i)
-    return res
+    return categories_all
 
 
 async def get_category(session: AsyncSession, category_id: int) -> Category:

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import CategoryCreate, CategoryBase, CategorySelfUpdate
@@ -6,8 +8,7 @@ from .crud import create_category, get_user_categories, get_category, update_cat
 from core.models import db_helper, User, Category
 
 
-router = APIRouter(tags=["Categories"],
-                   prefix='/api/categories')
+router = APIRouter(tags=["Categories"])
 
 
 @router.post("/create", response_model=CategoryBase, status_code=status.HTTP_201_CREATED)
@@ -29,7 +30,7 @@ async def create_new_category(
 
 @router.get("/{user_id}", response_model=list[CategoryBase])
 async def get_categories_by_user(
-        user_id: int,
+        user_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> list[CategoryBase]:
     """
@@ -46,7 +47,7 @@ async def get_categories_by_user(
 
 @router.get("/{category_id}", response_model=CategoryBase)
 async def get_category_by_id(
-        category_id: int,
+        category_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> CategoryBase:
     """
@@ -61,7 +62,7 @@ async def get_category_by_id(
 
 @router.put("/{category_id}", response_model=CategoryBase)
 async def update_category_by_id(
-        category_id: int,
+        category_id: Annotated[int, Path()],
         category_in: CategorySelfUpdate,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> CategoryBase:
@@ -78,7 +79,7 @@ async def update_category_by_id(
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category_by_id(
-        category_id: int,
+        category_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> None:
     """
