@@ -29,7 +29,7 @@
        >
          <template #content>
           <div class="p-4">
-             <div class="text-lg font-semibold text-danger">{{ totalExpensesFormatted }}</div>
+             <div class="text-lg font-semibold text-red-600">{{ totalExpensesFormatted }}</div>
              <div class="text-sm text-color-secondary">Траты</div>
           </div>
          </template>
@@ -47,7 +47,7 @@
        >
          <template #content>
          <div class="p-4">
-            <div class="text-lg font-semibold text-success">{{ totalIncomeFormatted }}</div>
+            <div class="text-lg font-semibold text-green-600">{{ totalIncomeFormatted }}</div>
             <div class="text-sm text-color-secondary">Доходы</div>
          </div>
          </template>
