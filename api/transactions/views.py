@@ -11,8 +11,7 @@ from core.models import db_helper, User, Category
 from typing import Optional
 
 
-router = APIRouter(tags=["Transactions"],
-                   prefix='/api/transactions')
+router = APIRouter(tags=["Transactions"])
 
 
 @router.post("/create", response_model=TransactionBase, status_code=status.HTTP_201_CREATED)

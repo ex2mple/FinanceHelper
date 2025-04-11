@@ -6,8 +6,7 @@ from .crud import create_category, get_user_categories, get_category, update_cat
 from core.models import db_helper, User, Category
 
 
-router = APIRouter(tags=["Categories"],
-                   prefix='/api/categories')
+router = APIRouter(tags=["Categories"])
 
 
 @router.post("/create", response_model=CategoryBase, status_code=status.HTTP_201_CREATED)
