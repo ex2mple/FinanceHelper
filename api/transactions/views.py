@@ -116,13 +116,14 @@ async def get_filtered_transactions_api(
     """
         Получение списка транзакций с фильтрацией и сортировкой.
     """
-    start_date = make_timezone_aware(start_date)
-    end_date = make_timezone_aware(end_date)
-    if start_date and end_date and start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="start_date must be less than or equal to end_date",
-        )
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
 
     transactions = await get_filtered_transactions(
         session=session,
@@ -146,13 +147,14 @@ async def get_filtered_transactions_grouped_api(
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
-    start_date = make_timezone_aware(start_date)
-    end_date = make_timezone_aware(end_date)
-    if start_date and end_date and start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="start_date must be less than or equal to end_date",
-        )
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
 
     transactions = await get_filtered_transactions_grouped(
         session=session,
