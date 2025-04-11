@@ -1,6 +1,6 @@
 import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,8 +8,7 @@ from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
 from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction, \
     get_filtered_transactions, get_filtered_transactions_grouped
 from core.models import db_helper, User, Category
-from typing import Optional
-
+from typing import Optional, Annotated
 
 router = APIRouter(tags=["Transactions"])
 
@@ -38,7 +37,7 @@ async def create_new_transaction(
 
 @router.get("/{user_id}", response_model=list[TransactionBase])
 async def get_transactions_by_user(
-        user_id: int,
+        user_id: Annotated[int, Path()],
         limit: Optional[int] = Query(default=None, ge=0),
         offset: Optional[int] = Query(default=None, ge=0),
         session: AsyncSession = Depends(db_helper.session_dependency),
@@ -57,7 +56,7 @@ async def get_transactions_by_user(
 
 @router.get("/{transaction_id}", response_model=TransactionBase)
 async def get_transaction_by_id(
-        transaction_id: int,
+        transaction_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> TransactionBase:
     """
@@ -72,7 +71,7 @@ async def get_transaction_by_id(
 
 @router.put("/{transaction_id}", response_model=TransactionBase)
 async def update_transaction_by_id(
-        transaction_id: int,
+        transaction_id: Annotated[int, Path()],
         transaction_in: TransactionSelfUpdate,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> TransactionBase:
@@ -89,7 +88,7 @@ async def update_transaction_by_id(
 
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_transaction_by_id(
-        transaction_id: int,
+        transaction_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> None:
     """
