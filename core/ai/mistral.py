@@ -1,11 +1,10 @@
 """
 Mistral AI client implementation for asynchronous interaction with Mistral AI agents.
 """
-import os
 import asyncio
 from typing import List, Dict, Optional, Union
 
-from mistralai import MistralClient
+from mistralai.client import MistralClient
 from pydantic import BaseModel, Field
 
 from core.config import settings
@@ -69,21 +68,55 @@ class MistralAgent:
             A MistralResponseSchema with the response and metadata.
         """
         # Run the agent completion in an executor to make it asynchronous
-        # Не передаем температуру здесь, так как она настраивается в самом агенте
-        response = await self._run_in_executor(
-            self.client.agents.complete,
-            agent_id=agent_id,
-            messages=messages
-        )
-        
-        # Extract relevant information from the response
-        result = MistralResponseSchema(
-            response=response.choices[0].message.content,
-            model=agent_id,
-            usage={}  # Agent API might not provide usage data in the same format
-        )
-        
-        return result
+        try:
+            response = await self._run_in_executor(
+                self.client.chat_with_agent,
+                agent_id=agent_id,
+                messages=messages
+            )
+            
+            # Extract relevant information from the response
+            result = MistralResponseSchema(
+                response=response.choices[0].message.content,
+                model=agent_id,
+                usage={}
+            )
+            
+            return result
+        except AttributeError:
+            # В случае изменения API, пробуем альтернативный метод
+            try:
+                response = await self._run_in_executor(
+                    self.client.agents.chat,
+                    agent_id=agent_id,
+                    messages=messages
+                )
+                
+                result = MistralResponseSchema(
+                    response=response.choices[0].message.content,
+                    model=agent_id,
+                    usage={}
+                )
+                
+                return result
+            except AttributeError:
+                # Пробуем еще один вариант API
+                try:
+                    response = await self._run_in_executor(
+                        self.client.agents.complete,
+                        agent_id=agent_id,
+                        messages=messages
+                    )
+                    
+                    result = MistralResponseSchema(
+                        response=response.choices[0].message.content,
+                        model=agent_id,
+                        usage={}
+                    )
+                    
+                    return result
+                except Exception as e:
+                    raise Exception(f"Ошибка при вызове Mistral API: {str(e)}")
     
     async def generate_agent_response(
         self,
@@ -109,7 +142,6 @@ class MistralAgent:
         ]
         
         # Generate the response using the specified agent
-        # Не передаем температуру, так как она настраивается в самом агенте
         response = await self.agent_completion(
             agent_id=agent_id,
             messages=messages
