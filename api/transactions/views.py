@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
 from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction
 from core.models import db_helper, User, Category
+from typing import Optional
 
 
 router = APIRouter(tags=["Transactions"],
@@ -35,8 +36,8 @@ async def create_new_transaction(
 @router.get("/{user_id}", response_model=list[TransactionBase])
 async def get_transactions_by_user(
         user_id: int,
-        limit: int = 10,
-        offset: int = 0,
+        limit: Optional[int] = 10,
+        offset: Optional[int] = 0,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> list[TransactionBase]:
     """
