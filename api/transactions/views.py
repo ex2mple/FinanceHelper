@@ -26,7 +26,7 @@ async def create_new_transaction(
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    stmt = select(Category).where(Category.id == transaction_in.id)
+    stmt = select(Category).where(Category.id == transaction_in.category_id)
     category_exists = (await session.scalars(stmt)).first()
     if category_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
