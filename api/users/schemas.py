@@ -1,6 +1,6 @@
 # import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Annotated, Literal
 
 
@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 class UserBase(BaseModel):
     id: int
     username: str
+    email: str
 
 
 class UserCreate(BaseModel):
@@ -20,6 +21,7 @@ class UserCreate(BaseModel):
     gender: Annotated[Literal["Male", "Female"], Field(...)]
     age: Annotated[int, Field(..., ge=0, le=99)]
     salary: Annotated[int, Field(..., ge=0)]
+    email: Annotated[EmailStr, Field(...)]
 
 
 class UserSelfUpdate(UserCreate):

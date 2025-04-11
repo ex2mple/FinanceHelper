@@ -9,4 +9,5 @@ class User(Base):
     gender: Mapped[str] = mapped_column(String)
     age: Mapped[int] = mapped_column(Integer)
     salary: Mapped[int] = mapped_column(Integer)
+    email: Mapped[str] = mapped_column(String, unique=True)
     # role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=1)
