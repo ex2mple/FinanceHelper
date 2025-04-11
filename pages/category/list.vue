@@ -124,7 +124,14 @@
         </Dialog>
 
         <!-- Диалог подтверждения удаления -->
-        <ConfirmDialog></ConfirmDialog>
+        <ConfirmDialog>
+          <template #message="slotProps">
+                <div class="flex flex-col items-center w-full gap-4 border-b border-surface-200 dark:border-surface-700">
+                  <i :class="slotProps.message.icon" class="text-5xl text-primary-500"></i>
+                  <p class="pb-4">{{ slotProps.message.message }}</p>
+                </div>
+          </template>
+        </ConfirmDialog>
       </template>
     </Card>
   </div>
@@ -272,6 +279,17 @@ const confirmDelete = (categoryData) => {
     message: `Вы уверены, что хотите удалить категорию "${categoryData.name}"?`,
     header: 'Подтверждение удаления',
     icon: 'pi pi-exclamation-triangle',
+    rejectProps: {
+            label: 'Нет',
+            icon: 'pi pi-times',
+            outlined: true,
+            size: 'small'
+        },
+        acceptProps: {
+            label: 'Да',
+            icon: 'pi pi-check',
+            size: 'small'
+        },
     acceptClass: 'p-button-danger',
     accept: () => deleteCategory(categoryData),
     reject: () => {
