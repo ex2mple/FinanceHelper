@@ -36,8 +36,8 @@ async def create_new_transaction(
 @router.get("/{user_id}", response_model=list[TransactionBase])
 async def get_transactions_by_user(
         user_id: int,
-        limit: Optional[int] = 10,
-        offset: Optional[int] = 0,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> list[TransactionBase]:
     """

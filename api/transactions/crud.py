@@ -12,14 +12,17 @@ async def create_transaction(session: AsyncSession, transaction_in: TransactionC
 
 
 async def get_user_transactions(session: AsyncSession, user_id: int,
-                                limit: int, offset: int) -> list[Transaction]:
+                                limit: int | None, offset: int | None) -> list[Transaction]:
     stmt = (
         select(Transaction)
         .where(Transaction.user_id == user_id)
         .order_by(Transaction.datetime)
-        .offset(offset)
-        .limit(limit)
     )
+    if offset is not None:
+        stmt = stmt.offset(offset)
+    if limit is not None:
+        stmt = stmt.limit(limit)
+
     transactions_all = (await session.scalars(stmt)).all()
     res = []
     for i in transactions_all:
