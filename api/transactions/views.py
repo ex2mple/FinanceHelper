@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
@@ -36,8 +37,8 @@ async def create_new_transaction(
 @router.get("/{user_id}", response_model=list[TransactionBase])
 async def get_transactions_by_user(
         user_id: int,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        limit: Optional[int] = Field(default=None, ge=0),
+        offset: Optional[int] = Field(default=None, ge=0),
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> list[TransactionBase]:
     """
