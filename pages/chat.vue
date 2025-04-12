@@ -60,7 +60,7 @@
               aria-label="Отправить"
             />
           </div>
-          <small v-if="error" class="error-message">{{ error }}</small>
+          <small v-if="error" class="error-message" style="color: red;">{{ error }}</small>
         </div>
       </template>
     </Card>
