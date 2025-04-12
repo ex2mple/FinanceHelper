@@ -472,7 +472,7 @@ async def upload_transaction_in_csv(
 
                 # Создаем объект TransactionCreate
                 transaction_data = {
-                    "title": transaction_type_descriptions[transaction_type],
+                    "title": transaction_type_descriptions.get(transaction_type, 'Неизвестная операция'),
                     "amount": amount,
                     "category_id": category_id,
                     "datetime": datetime_obj
