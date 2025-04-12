@@ -16,8 +16,14 @@
         </div>
       </template>
       <template #content>
-        <!-- Таблица категорий -->
+        <!-- Компонент NothingHere, если нет данных -->
+        <div v-if="!loading && (!categories || categories.length === 0)">
+          <NothingHere />
+        </div>
+        
+        <!-- Таблица категорий, если есть данные -->
         <DataTable
+            v-else
             :value="categories"
             stripedRows
             :paginator="categories.length > 10"
@@ -152,6 +158,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { yupResolver } from '@primevue/forms/resolvers/yup'
 import { categorySchema, type CategoryModel } from '~/types/categoryModel'
 import instance from '~/axiosInstance'
+import NothingHere from '~/components/NothingHere.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
