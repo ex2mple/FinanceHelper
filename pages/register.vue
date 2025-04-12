@@ -2,7 +2,7 @@
 import {createUserSchema, type CreateUser} from '~/types/authModels'
 import {yupResolver} from '@primevue/forms/resolvers/yup'
 import {useToast} from '#imports'
-import instance from '~/axiosInstance'
+import instance from '~/axiosinstance'
 
 definePageMeta({
   requireAuth: false,
@@ -28,7 +28,7 @@ const onSubmit = async (data: { valid: Boolean; values: CreateUser }) => {
   }
 
   try {
-    console.log(data.values)
+    console.log(data)
     instance.post('/users/', data.values)
         .then(() => {
           const formData = new FormData()
