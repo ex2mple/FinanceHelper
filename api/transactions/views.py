@@ -71,7 +71,7 @@ async def get_transaction_by_id(
     return transaction
 
 
-@router.put("/{transaction_id}", response_model=TransactionBase)
+@router.patch("/{transaction_id}", response_model=TransactionBase)
 async def update_transaction_by_id(
         transaction_id: Annotated[int, Path()],
         transaction_in: TransactionSelfUpdate,

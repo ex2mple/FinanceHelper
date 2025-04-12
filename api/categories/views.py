@@ -60,7 +60,7 @@ async def get_category_by_id(
     return category
 
 
-@router.put("/{category_id}", response_model=CategoryBase)
+@router.patch("/{category_id}", response_model=CategoryBase)
 async def update_category_by_id(
         category_id: Annotated[int, Path()],
         category_in: CategorySelfUpdate,
