@@ -12,6 +12,7 @@ class TransactionBase(BaseModel):
     id: int
     user_id: int
     category_id: int
+    title: str
     datetime: datetime.datetime
     amount: int
     user: UserBase
@@ -24,9 +25,10 @@ class TransactionBase(BaseModel):
 
 
 class TransactionCreate(BaseModel):
+    title: Annotated[str, Field(...)]
     category_id: Annotated[int, Field(...)]
     datetime: Annotated[datetime.datetime, Field(...)]
-    amount: Annotated[int, Field(..., ge=0)]
+    amount: Annotated[int, Field(...)]
 
     @field_validator('datetime')
     @classmethod
@@ -35,10 +37,11 @@ class TransactionCreate(BaseModel):
 
 
 class TransactionSelfUpdate(BaseModel):
+    title: Annotated[str | None, Field(default=None)]
     user_id: Annotated[int | None, Field(default=None)]
     category_id: Annotated[int | None, Field(default=None)]
     datetime: Annotated[datetime.datetime | None, Field(default=None)]
-    amount: Annotated[int | None, Field(default=None,  ge=0)]
+    amount: Annotated[int | None, Field(default=None)]
 
     @field_validator('datetime')
     @classmethod

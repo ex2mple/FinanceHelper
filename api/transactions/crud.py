@@ -47,6 +47,8 @@ async def update_transaction(session: AsyncSession, transaction: Transaction,
         transaction.user_id = transaction_in.user_id
     if transaction_in.category_id is not None:
         transaction.category_id = transaction_in.category_id
+    if transaction_in.title is not None:
+        transaction.title = transaction_in.title
     if transaction_in.datetime is not None:
         transaction.datetime = transaction_in.datetime
     if transaction_in.amount is not None:

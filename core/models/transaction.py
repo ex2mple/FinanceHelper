@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, DateTime, Integer
+from sqlalchemy import ForeignKey, DateTime, Integer, String
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -8,6 +8,7 @@ class Transaction(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey("categorys.id"))
     datetime: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
     amount: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String)
 
     user: Mapped["User"] = relationship(
         back_populates="transactions", uselist=False
