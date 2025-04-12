@@ -30,9 +30,13 @@ services:
       POSTGRES_USER: root # Имя пользователя БД
       POSTGRES_PASSWORD: hackpassword # Пароль пользователя БД
       POSTGRES_DB: hack # Имя базы данных для создания
+      POSTGRES_INITDB_ARGS: "--data-checksums --encoding=UTF8 --locale=C"
+      TZ: "UTC"  # Устанавливаем часовой пояс для контейнера
+      PGTZ: "UTC"  # Устанавливаем часовой пояс для PostgreSQL
     volumes:
       # Создаем именованный том для сохранения данных БД между перезапусками контейнера
       - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "timezone=UTC"]  # Явно указываем timezone
     ports:
       # Можно пробросить порт БД наружу для отладки (не обязательно для работы приложения)
       - "5433:5432" # <порт_на_хосте>:<порт_в_контейнере>
