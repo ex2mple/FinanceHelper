@@ -26,7 +26,7 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
                                 limit: int | None, offset: int | None) -> list[Transaction]:
     stmt = (
         select(Transaction)
-        .options(selectinload(Transaction.category))
+        .options(selectinload(Transaction.category).selectinload(Category.user))
         .options(selectinload(Transaction.user))
         .where(Transaction.user_id == user_id)
         .order_by(Transaction.datetime)
@@ -42,7 +42,7 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
 
 async def get_transaction(session: AsyncSession, transaction_id: int) -> Transaction:
     stmt = (select(Transaction)
-            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.category).selectinload(Category.user))
             .options(selectinload(Transaction.user))
             .where(Transaction.id == transaction_id))
     transaction = (await session.execute(stmt)).scalar_one_or_none()
@@ -81,7 +81,7 @@ async def get_filtered_transactions(
     end_date: datetime.datetime | None = None,
 ) -> list[Transaction]:
     stmt = (select(Transaction)
-            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.category).selectinload(Category.user))
             .options(selectinload(Transaction.user)))
 
     # Фильтрация по user_id
@@ -119,7 +119,7 @@ async def get_filtered_transactions_grouped(
     end_date: datetime.datetime | None = None,
 ) -> list[tuple[str, int]]:
     stmt = (select(Category.name, func.sum(Transaction.amount).label("total_amount"))
-            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.category).selectinload(Category.user))
             .options(selectinload(Transaction.user)))
 
     # Фильтрация по user_id
