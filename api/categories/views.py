@@ -126,5 +126,6 @@ async def delete_category_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
     if category.transactions:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category has transactions and cannot be deleted")
-
+    if category.user_id == 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Default category cannot be deleted")
     await delete_category(session=session, category=category)
