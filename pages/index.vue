@@ -95,20 +95,8 @@
               </div>
               <!-- Сумма и доп. инфо -->
               <div class="text-right flex-shrink-0 ml-2">
-                <div
-                    :class="[
-                        'font-semibold text-sm',
-                        transaction.amount > 0 ? 'text-success' : 'text-color'
-                        ]"
-                >
+                <div :class="['font-semibold text-sm']">
                   {{ formatAmount(transaction.amount) }}
-                </div>
-                <div v-if="transaction.details || transaction.bonus"
-                     class="text-xs text-color-secondary mt-0.5 flex justify-end items-center gap-1">
-                  <!-- Пример отображения бонусов или деталей -->
-<!--                  <Tag v-if="transaction.bonus" :value="`+${transaction.bonus}`" severity="warning"-->
-<!--                       class="text-[10px] px-1 py-0"></Tag>-->
-<!--                  <span class="truncate">{{ transaction.details }}</span>-->
                 </div>
               </div>
             </li>
@@ -129,7 +117,7 @@ import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Tag from 'primevue/tag';
 import Card from 'primevue/card';
-import instance from "~/axiosInstance";
+import instance from "~/axiosinstance";
 
 // --- Данные ---
 // Получаем текущий месяц (0-11)
@@ -216,7 +204,7 @@ onMounted(async () => {
 // --- Вспомогательные функции ---
 
 const formatAmount = (amount) => {
-  const sign = amount > 0 ? '+' : '';
+  const sign = amount > 0 ? '+' : '-';
   const formatted = Math.abs(amount).toLocaleString('ru-RU');
   return `${sign}${formatted} ₽`;
 };
@@ -236,18 +224,6 @@ const formatDateGroup = (dateString) => {
   return date.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'});
 };
 
-// Получение CSS класса для фона иконки
-const getIconBgClass = (category) => {
-  const colors = {
-    'Супермаркеты': 'bg-pink-500',
-    'Переводы': 'bg-yellow-500 text-gray-900', // Пример с темным текстом
-    'Транспорт': 'bg-primary',
-    'Фастфуд': 'bg-orange-500',
-    'Местный транспорт': 'bg-red-600',
-    'Доходы': 'bg-green-500',
-  };
-  return colors[category] || 'bg-surface-500'; // Цвет по умолчанию
-};
 
 const calculateDailyTotal = (dailyTransactions) => {
   const total = dailyTransactions.reduce((sum, tx) => sum + tx.amount, 0);
@@ -289,7 +265,7 @@ const totalIncomeFormatted = computed(() => {
 const onTransactionClick = (transaction) => {
   console.log("Clicked transaction:", transaction);
   // Здесь можно открыть модальное окно, перейти на другую страницу и т.д.
-  alert(`Клик по транзакции: ${transaction.name} (${formatAmount(transaction.amount)})`);
+  alert(`Клик по транзакции: ${transaction.title} (${formatAmount(transaction.amount)})`);
 }
 
 // --- Фильтрация и Группировка ---
