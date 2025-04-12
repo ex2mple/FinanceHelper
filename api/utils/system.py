@@ -33,7 +33,7 @@ def generate_beautiful_color() -> str:
 
 
 async def create_system_user_and_categories(session: AsyncSession) -> None:
-    exists_system_user = await get_user_by_id(session, -1)
+    exists_system_user = await get_user_by_id(session, 0)
     if exists_system_user:
         return
 
