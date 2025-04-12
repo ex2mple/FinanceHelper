@@ -13,9 +13,7 @@ import os.path
 router = APIRouter(tags=["Users"])
 
 
-@router.post(
-    "/", response_model=schemas.UserCreate, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=schemas.UserBase, status_code=status.HTTP_201_CREATED)
 async def create_user(
         user: schemas.UserCreate,
         session: AsyncSession = Depends(db_helper.session_dependency),
@@ -24,7 +22,8 @@ async def create_user(
     user_check = await get_user_by_email(session=session, email=user.email)
     if user_check is not None:
         raise HTTPException(status_code=401, detail="User already exist")
-    await crud.create_user(session=session, user_in=user)
+
+    return await crud.create_user(session=session, user_in=user)
 
 
 @router.patch("/update", status_code=status.HTTP_204_NO_CONTENT)
@@ -32,8 +31,8 @@ async def self_user_update(
         data: schemas.UserSelfUpdate,
         current_user: user_dependency,
         session: AsyncSession = Depends(db_helper.session_dependency),
-) -> None:
-    await crud.self_update_user(session=session, user=current_user, data=data)
+) -> schemas.UserBase:
+    return await crud.self_update_user(session=session, user=current_user, data=data)
 
 
 @router.get("/{username}", response_model=schemas.UserBase)

@@ -60,7 +60,7 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
 
 async def self_update_user(
         session: AsyncSession, user: User, data: UserSelfUpdate
-) -> None:
+) -> User:
     if data.gender:
         user.gender = data.gender
     if data.age:
@@ -71,6 +71,7 @@ async def self_update_user(
         user.password = get_password_hash(data.password)
     await session.commit()
     await session.refresh(user)
+    return user
 
 
 async def delete_user(session: AsyncSession, user: UserBase) -> None:
