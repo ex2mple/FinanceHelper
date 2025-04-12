@@ -3,21 +3,26 @@ import { passwordMaxLength, passwordMinLength } from '~/constants/authErrorMessa
 import { emailError, requiredError } from '~/constants/defaultErrorMessages'
 
 export const createUserSchema = yup.object({
-  email: yup.string().email(emailError).required(requiredError),
+  email: yup.string().email(emailError).required(requiredError).max(100, 'Слишком длинный email'),
+  firstName: yup.string().required(requiredError).max(100, 'Слишком длинное имя'),
   password: yup
     .string()
     .min(8, passwordMinLength)
-    .max(20, passwordMaxLength)
+    .max(50, passwordMaxLength)
     .required(requiredError),
-  username: yup.string().required(requiredError),
+  username: yup.string().required(requiredError).max(50, 'Слишком длинный никнейм'),
   gender: yup.string().oneOf(['Male', 'Female']).required(requiredError),
   age: yup.number().positive('Должно быть больше 13').required(requiredError).min(14, 'Возраст должен быть больше 13'),
-  salary: yup.number().positive('Должно быть больше 0').required(requiredError).min(0),
+  salary: yup.number().positive('Должно быть больше 0').required(requiredError).min(1, 'Зарплата должна быть больше 0').max(100000000, 'Слишком большая зарплата'),
 })
 
 export const loginUserSchema = yup.object({
-  email: yup.string().email(emailError).required(requiredError),
-  password: yup.string().required(requiredError).max(20, passwordMaxLength),
+  email: yup.string().email(emailError).required(requiredError).max(100, 'Слишком длинный email'),
+  password: yup
+  .string()
+  .min(8, passwordMinLength)
+  .max(50, passwordMaxLength)
+  .required(requiredError),
 })
 
 export interface CreateUser extends yup.InferType<typeof createUserSchema> {}

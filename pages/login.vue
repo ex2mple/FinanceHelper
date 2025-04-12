@@ -2,8 +2,7 @@
 import {loginUserSchema} from '~/types/authModels'
 import {yupResolver} from '@primevue/forms/resolvers/yup'
 import {useToast} from '#imports'
-import {API} from '~/constants/Api'
-import instance from '~/axiosinstance'
+import instance from '~/axiosInstance'
 
 definePageMeta({
   requireAuth: false,
@@ -12,10 +11,6 @@ definePageMeta({
 
 const resolver = yupResolver(loginUserSchema)
 const toast = useToast()
-
-const redirectToYandexAuth = () => {
-  window.location.href = `${API}/yandex/login`
-}
 
 const displayErrorToast = (msg: string) => {
   toast.add({
@@ -119,21 +114,6 @@ const onSubmit = async (data: any) => {
               Создать аккаунт
             </NuxtLink>
           </div>
-
-          <Divider align="center">
-            <span class="0 px-2">или</span>
-          </Divider>
-
-          <Button
-              type="button"
-              class="w-full p-button-secondary"
-              @click="redirectToYandexAuth"
-          >
-            <div class="flex items-center justify-center gap-2">
-              <img src="/assets/YaLogo.svg" width="24" height="24" alt="Логотип Яндекса"/>
-              <span>Войти через Яндекс</span>
-            </div>
-          </Button>
         </Form>
       </template>
     </Card>
