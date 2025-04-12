@@ -9,8 +9,9 @@ export const createUserSchema = yup.object({
     .min(8, passwordMinLength)
     .max(20, passwordMaxLength)
     .required(requiredError),
-  first_name: yup.string().required(requiredError),
-  gender: yup.string().oneOf(['male', 'female']).required(requiredError),
+  username: yup.string().required(requiredError),
+  gender: yup.string().oneOf(['Male', 'Female']).required(requiredError),
+  age: yup.number().positive('Должно быть больше 13').required(requiredError).min(14, 'Возраст должен быть больше 13'),
   salary: yup.number().positive('Должно быть больше 0').required(requiredError).min(0),
 })
 

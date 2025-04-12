@@ -169,7 +169,7 @@ const isEditMode = ref(false)
 const categories = ref<CategoryModel[]>([])
 const category = ref<CategoryModel>({ 
   name: '', 
-  color: '#4CAF50' 
+  color: '4CAF50'
 })
 const resolver = yupResolver(categorySchema)
 
@@ -177,7 +177,7 @@ const resolver = yupResolver(categorySchema)
 const fetchCategories = async () => {
   loading.value = true
   try {
-    const response = await instance.get('/api/v1/categories/my')
+    const response = await instance.get('/categories/my')
     categories.value = response.data || []
   } catch (error: any) {
     console.error('Ошибка при загрузке категорий:', error)
@@ -194,7 +194,7 @@ const onRowClick = (event: { data: CategoryModel }) => {
 
 // Открыть диалог создания новой категории
 const openNewCategoryDialog = () => {
-  category.value = { name: '', color: '#4CAF50' }
+  category.value = { name: '', color: '4CAF50' }
   categoryDialog.value = true
   isEditMode.value = false
 }
@@ -204,7 +204,7 @@ const editCategory = async (categoryData: CategoryModel) => {
   loading.value = true
   try {
     // Используем новый эндпоинт /api/v1/categories/{category_id}
-    const response = await instance.get(`/api/v1/categories/${categoryData.id}`)
+    const response = await instance.get(`/categories/${categoryData.id}`)
     category.value = response.data
     categoryDialog.value = true
     isEditMode.value = true
@@ -233,9 +233,9 @@ const saveCategory = async (event: any) => {
   try {
     if (isEditMode.value) {
       // Редактирование существующей категории
-      await instance.patch(`/api/v1/categories/${formValues.id}`, {
+      await instance.patch(`/categories/${formValues.id}`, {
         name: formValues.name,
-        color: formValues.color
+        color: "#"+formValues.color
       })
 
       toast.add({
@@ -246,9 +246,9 @@ const saveCategory = async (event: any) => {
       })
     } else {
       // Добавление новой категории - используем эндпоинт без user_id
-      await instance.post('/api/v1/categories/create', {
+      await instance.post('/categories/create', {
         name: formValues.name,
-        color: formValues.color
+        color: "#"+formValues.color
       })
 
       toast.add({
@@ -297,7 +297,7 @@ const deleteCategory = async (categoryData: CategoryModel) => {
   try {
     loading.value = true
     // Используем новый эндпоинт для удаления: /api/v1/categories/{category_id}
-    await instance.delete(`/api/v1/categories/${categoryData.id}`)
+    await instance.delete(`/categories/${categoryData.id}`)
 
     toast.add({
       severity: 'success',

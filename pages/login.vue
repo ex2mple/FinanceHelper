@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { loginUserSchema } from '~/types/authModels'
-import { yupResolver } from '@primevue/forms/resolvers/yup'
-import { useToast } from '#imports'
-import { API } from '~/constants/Api'
-import instance from '~/axiosInstance'
+import {loginUserSchema} from '~/types/authModels'
+import {yupResolver} from '@primevue/forms/resolvers/yup'
+import {useToast} from '#imports'
+import {API} from '~/constants/Api'
+import instance from '~/axiosinstance'
 
 definePageMeta({
   requireAuth: false,
@@ -30,14 +30,14 @@ const onSubmit = async (data: any) => {
   if (!data.valid) {
     return
   }
+  console.log(data)
+
+  const formData = new FormData()
+  formData.set('username', data.values.email)
+  formData.set('password', data.values.password)
 
   try {
-    const res = await instance.post('/auth/login', {
-      email: data.values.email,
-      password: data.values.password,
-    })
-    localStorage.setItem('user', JSON.stringify(res.data))
-    localStorage.setItem('user_id', res.data.user.id)
+    const res = await instance.post('/auth/token', formData, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
     navigateTo('/')
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : String(err)
@@ -48,34 +48,34 @@ const onSubmit = async (data: any) => {
 </script>
 
 <template>
-  <Toast position="top-right" />
+  <Toast position="top-right"/>
   <div
-    class="flex min-h-screen w-full items-center justify-center p-4"
+      class="flex min-h-screen w-full items-center justify-center p-4"
   >
     <Card
-      class="animate-fadein w-full max-w-md backdrop-blur-md shadow-lg border-0 "
+        class="animate-fadein w-full max-w-md backdrop-blur-md shadow-lg border-0 "
     >
       <template #title>
         <h1 class="text-3xl font-medium text-center mb-4">Добро пожаловать</h1>
       </template>
       <template #content>
         <Form
-          @submit="onSubmit"
-          v-slot="form"
-          :resolver="resolver"
-          :validateOnValueUpdate="false"
-          :validateOnBlur="true"
-          class="space-y-4"
+            @submit="onSubmit"
+            v-slot="form"
+            :resolver="resolver"
+            :validateOnValueUpdate="false"
+            :validateOnBlur="true"
+            class="space-y-4"
         >
           <div>
             <span class="p-float-label">
               <label for="email">Email</label>
               <InputText
-                id="email"
-                type="text"
-                name="email"
-                class="w-full rounded-lg p-input-filled"
-                :class="{'p-invalid': form.email?.invalid}"
+                  id="email"
+                  type="text"
+                  name="email"
+                  class="w-full rounded-lg p-input-filled"
+                  :class="{'p-invalid': form.email?.invalid}"
               />
             </span>
             <Message v-if="form.email?.invalid" severity="error" class="mt-2">
@@ -87,14 +87,14 @@ const onSubmit = async (data: any) => {
             <span class="p-float-label">
               <label for="password">Пароль</label>
               <Password
-                id="password"
-                name="password"
-                toggleMask
-                :feedback="false"
-                class="w-full"
-                inputClass="w-full rounded-lg p-input-filled"
-                :class="{'p-invalid': form.password?.invalid}"
-                :inputStyle="{ width: '100%' }"
+                  id="password"
+                  name="password"
+                  toggleMask
+                  :feedback="false"
+                  class="w-full"
+                  inputClass="w-full rounded-lg p-input-filled"
+                  :class="{'p-invalid': form.password?.invalid}"
+                  :inputStyle="{ width: '100%' }"
               />
             </span>
             <Message v-if="form.password?.invalid" severity="error" class="mt-2">
@@ -104,17 +104,17 @@ const onSubmit = async (data: any) => {
 
           <div class="pt-4">
             <Button
-              type="submit"
-              label="Войти"
-              class="w-full"
-              :loading="!!form.isSubmitting"
+                type="submit"
+                label="Войти"
+                class="w-full"
+                :loading="!!form.isSubmitting"
             />
           </div>
 
           <div class="text-center">
             <NuxtLink
-              to="/auth/reg"
-              class="hover:underline font-medium"
+                to="/register"
+                class="hover:underline font-medium"
             >
               Создать аккаунт
             </NuxtLink>
@@ -125,12 +125,12 @@ const onSubmit = async (data: any) => {
           </Divider>
 
           <Button
-            type="button"
-            class="w-full p-button-secondary"
-            @click="redirectToYandexAuth"
+              type="button"
+              class="w-full p-button-secondary"
+              @click="redirectToYandexAuth"
           >
             <div class="flex items-center justify-center gap-2">
-              <img src="/assets/YaLogo.svg" width="24" height="24" alt="Логотип Яндекса" />
+              <img src="/assets/YaLogo.svg" width="24" height="24" alt="Логотип Яндекса"/>
               <span>Войти через Яндекс</span>
             </div>
           </Button>
