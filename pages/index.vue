@@ -82,15 +82,15 @@
               <div class="flex items-center overflow-hidden mr-2">
                 <!-- Иконка PrimeVue Avatar -->
                 <Avatar
-                    :image="transaction.iconUrl"
-                    :label="!transaction.iconUrl ? transaction.name.charAt(0) : undefined"
-                    :class="['h-10 w-10 mr-3 flex-shrink-0', getIconBgClass(transaction.category)]"
+                    :label="`${transaction.title[0]}`"
+                    :style="`background-color: ${transaction.category.color}`"
+                    :class="['h-10 w-10 mr-3 flex-shrink-0']"
                     shape="circle"
                 />
                 <!-- Детали -->
                 <div class="overflow-hidden">
-                  <div class="font-medium text-sm truncate">{{ transaction.name }}</div>
-                  <div class="text-xs text-color-secondary truncate">{{ transaction.category }}</div>
+                  <div class="font-medium text-sm truncate">{{ transaction.title }}</div>
+                  <div class="text-xs text-color-secondary truncate">{{ transaction.category.name }}</div>
                 </div>
               </div>
               <!-- Сумма и доп. инфо -->
@@ -123,6 +123,7 @@
 </template>
 
 <script setup>
+import {Placeholder} from 'placeholder';
 import {ref, computed} from 'vue';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
@@ -295,12 +296,13 @@ const onTransactionClick = (transaction) => {
 // --- Фильтрация и Группировка ---
 
 // 1. Фильтруем по выбранному месяцу
+
 const filteredTransactions = computed(() => {
   if (selectedMonth.value === null) { // Если выбрано "Все месяцы"
     return allTransactions.value;
   }
   return allTransactions.value.filter(tx => {
-    const txDate = new Date(tx.date);
+    const txDate = new Date(tx.datetime);
     return txDate.getMonth() === selectedMonth.value;
     // Можно добавить фильтрацию по году, если нужно: && txDate.getFullYear() === нужный_год
   });
@@ -314,10 +316,10 @@ const groupedTransactions = computed(() => {
   }
 
   // Сортируем отфильтрованные транзакции
-  const sortedTransactions = [...filteredTransactions.value].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedTransactions = [...filteredTransactions.value].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
 
   sortedTransactions.forEach(transaction => {
-    const dateKey = formatDateGroup(transaction.date);
+    const dateKey = formatDateGroup(transaction.datetime);
     if (!groups[dateKey]) {
       groups[dateKey] = [];
     }

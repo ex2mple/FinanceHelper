@@ -203,7 +203,7 @@ const onSubmit = async (data: any) => {
       detail: 'Транзакция успешно добавлена',
       life: 3000,
     })
-
+    navigateTo('/')
   } catch (error: any) {
     console.error('Ошибка при сохранении:', error)
 
