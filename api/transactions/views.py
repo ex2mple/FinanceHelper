@@ -76,7 +76,7 @@ async def get_transactions_by_user(
     return transactions
 
 
-@router.get("/{user_id}", response_model=list[TransactionBase])
+@router.get("/user/{user_id}", response_model=list[TransactionBase])
 async def get_transactions_by_custom_user_id(
         user_id: Annotated[int, Path()],
         limit: Optional[int] = Query(default=None, ge=0),

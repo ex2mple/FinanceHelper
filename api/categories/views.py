@@ -56,7 +56,7 @@ async def get_categories_by_user(
     return categories
 
 
-@router.get("/{user_id}", response_model=list[CategoryBase])
+@router.get("/user/{user_id}", response_model=list[CategoryBase])
 async def get_categories_by_custom_user_id(
         user_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
