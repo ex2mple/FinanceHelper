@@ -20,7 +20,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
         select(Category)
         .options(selectinload(Category.user))
         .options(selectinload(Category.transactions))
-        .filter(or_(Category.user_id == user_id, Category.user_id == 0))
+        .filter(or_(Category.user_id == user_id, Category.user_id == 1))
         .order_by(Category.name)
     )
     categories_all = (await session.scalars(stmt)).all()
