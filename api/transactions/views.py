@@ -406,7 +406,7 @@ async def upload_transaction_in_csv(
         # Чтение содержимого файла
         contents = await file.read()
         contents = contents.decode('utf-8')
-        csv_reader = csv.DictReader(StringIO(contents))
+        csv_reader = csv.DictReader(StringIO(contents), delimiter=';')
 
         created_transactions = []
         errors = []
@@ -422,7 +422,6 @@ async def upload_transaction_in_csv(
 
                 # Проверяем обязательные поля
                 if not transaction_type or not date_str or not amount_str:
-                    print(f'<{transaction_type}>, <{category_name}>, <{date_str}>, <{amount_str}>')
                     errors.append(f"Строка {row_num}: отсутствуют обязательные поля")
                     continue
 

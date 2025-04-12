@@ -109,7 +109,7 @@ async def get_filtered_transactions(
         stmt = stmt.limit(limit)
 
     result = await session.execute(stmt)
-    return result.all()
+    return result.scalars().all()
 
 
 async def get_filtered_transactions_grouped(
@@ -119,8 +119,7 @@ async def get_filtered_transactions_grouped(
     end_date: datetime.datetime | None = None,
 ) -> list[tuple[str, int]]:
     stmt = (select(Category.name, func.sum(Transaction.amount).label("total_amount"))
-            .options(selectinload(Transaction.category).selectinload(Category.user))
-            .options(selectinload(Transaction.user)))
+            .join(Category))
 
     # Фильтрация по user_id
     if user_id is not None:
@@ -135,6 +134,6 @@ async def get_filtered_transactions_grouped(
         stmt = stmt.where(Transaction.datetime <= end_date)
 
     # Группировка по category_id
-    stmt = stmt.group_by(Transaction.category_id)
+    stmt = stmt.group_by(Category.name)
     result = (await session.execute(stmt)).all()
     return result
