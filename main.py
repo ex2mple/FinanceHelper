@@ -8,14 +8,17 @@ from api.utils.system import create_system_user_and_categories
 from core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.models import db_helper
+from core.models import db_helper, Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    session = await db_helper.session_dependency()
-    await create_system_user_and_categories(session)
-    await session.close()
+    # ЗАКОММЕНТИРОВАТЬ, ЕСЛИ ТАБЛИЦЫ УЖЕ СУЩЕСТВУЮТ
+    async with db_helper.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    async with db_helper.session_factory() as session:
+        await create_system_user_and_categories(session)
     yield
 
 
