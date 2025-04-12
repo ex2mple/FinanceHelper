@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from typing import Annotated
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class Token(BaseModel):
@@ -7,4 +9,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: EmailStr | None = None
+    email: Annotated[EmailStr | None, Field(default=None)]

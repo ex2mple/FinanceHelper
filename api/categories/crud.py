@@ -28,11 +28,13 @@ async def get_category(session: AsyncSession, category_id: int) -> Category:
 
 
 async def update_category(session: AsyncSession, category: Category,
-                             category_in: CategorySelfUpdate) -> Category:
+                          category_in: CategorySelfUpdate) -> Category:
     if category_in.user_id is not None:
         category.user_id = category_in.user_id
     if category_in.name is not None:
         category.name = category_in.name
+    if category_in.color is not None:
+        category.color = category_in.color
     await session.refresh(category)
     return category
 

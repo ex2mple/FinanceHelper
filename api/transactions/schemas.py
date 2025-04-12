@@ -32,9 +32,9 @@ class TransactionCreate(BaseModel):
 
 
 class TransactionSelfUpdate(BaseModel):
-    category_id: Annotated[int | None, Field(...)]
-    datetime: Annotated[datetime.datetime | None, Field(...)]
-    amount: Annotated[int | None, Field(..., ge=0)]
+    category_id: Annotated[int | None, Field(default=None)]
+    datetime: Annotated[datetime.datetime | None, Field(default=None)]
+    amount: Annotated[int | None, Field(default=None,  ge=0)]
 
     @field_validator('datetime')
     @classmethod
