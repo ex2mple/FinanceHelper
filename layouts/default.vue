@@ -50,13 +50,6 @@ import { API } from '~/constants/Api'
 
 const items = ref([
   {
-    label: 'Главная',
-    icon: 'pi pi-home',
-    command: () => {
-      return navigateTo('/')
-    },
-  },
-  {
     label: 'Транзакции',
     icon: 'pi pi-wallet',
     items: [
@@ -64,7 +57,7 @@ const items = ref([
         label: 'Список транзакций',
         icon: 'pi pi-list',
         command: () => {
-          return navigateTo('/transactions')
+          return navigateTo('/')
         },
       },
       {

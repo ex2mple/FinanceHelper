@@ -16,12 +16,9 @@
         </div>
       </template>
       <template #content>
-        <!-- Компонент NothingHere, если нет данных -->
         <div v-if="!loading && (!categories || categories.length === 0)">
           <NothingHere />
         </div>
-        
-        <!-- Таблица категорий, если есть данные -->
         <DataTable
             v-else
             :value="categories"
@@ -70,8 +67,6 @@
             </template>
           </Column>
         </DataTable>
-
-        <!-- Модальное окно добавления/редактирования категории -->
         <Dialog
             v-model:visible="categoryDialog"
             :style="{ width: '450px' }"
@@ -103,7 +98,6 @@
                   {{ form.name.error.message }}
                 </Message>
               </div>
-
               <div class="field mb-3">
                 <label for="categoryColor" class="font-medium mb-2 block">Цвет</label>
                 <div class="flex items-center gap-2">
@@ -117,7 +111,6 @@
                   {{ form.color.error.message }}
                 </Message>
               </div>
-              
               <div class="flex justify-end gap-2 mt-4">
                 <Button
                     type="button"
@@ -136,8 +129,6 @@
             </Form>
           </div>
         </Dialog>
-
-        <!-- Диалог подтверждения удаления -->
         <ConfirmDialog>
           <template #message="slotProps">
                 <div class="flex flex-col items-center w-full gap-4 border-b border-surface-200 dark:border-surface-700">
@@ -158,7 +149,6 @@ import { yupResolver } from '@primevue/forms/resolvers/yup'
 import { categorySchema, type CategoryModel } from '~/types/categoryModel'
 import instance from '~/axiosInstance'
 import NothingHere from '~/components/NothingHere.vue'
-import { onMounted, ref } from 'vue' // Added explicit imports
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -173,7 +163,6 @@ const category = ref<CategoryModel>({
 })
 const resolver = yupResolver(categorySchema)
 
-// Получение категорий с сервера
 const fetchCategories = async () => {
   loading.value = true
   try {
@@ -181,47 +170,39 @@ const fetchCategories = async () => {
     categories.value = response.data || []
   } catch (error: any) {
     console.error('Ошибка при загрузке категорий:', error)
-    displayErrorToast('Не удалось загрузить категории')
   } finally {
     loading.value = false
   }
 }
 
-// Обработчик клика по строке таблицы
 const onRowClick = (event: { data: CategoryModel }) => {
   selectedCategory.value = event.data
 }
 
-// Открыть диалог создания новой категории
 const openNewCategoryDialog = () => {
   category.value = { name: '', color: '4CAF50' }
   categoryDialog.value = true
   isEditMode.value = false
 }
 
-// Открыть диалог редактирования категории
 const editCategory = async (categoryData: CategoryModel) => {
   loading.value = true
   try {
-    // Используем новый эндпоинт /api/v1/categories/{category_id}
     const response = await instance.get(`/categories/${categoryData.id}`)
     category.value = response.data
     categoryDialog.value = true
     isEditMode.value = true
   } catch (error) {
     console.error('Ошибка при получении данных категории:', error)
-    displayErrorToast('Не удалось загрузить данные категории')
   } finally {
     loading.value = false
   }
 }
 
-// Скрыть диалог
 const hideDialog = () => {
   categoryDialog.value = false
 }
 
-// Сохранить категорию (добавление или редактирование)
 const saveCategory = async (event: any) => {
   if (!event.valid) {
     return
@@ -232,8 +213,7 @@ const saveCategory = async (event: any) => {
 
   try {
     if (isEditMode.value) {
-      // Редактирование существующей категории
-      await instance.patch(`/categories/${category.value.id}`, {
+      await instance.patch(`/categories/${formValues.id}`, {
         name: formValues.name,
         color: "#"+formValues.color
       })
@@ -245,7 +225,6 @@ const saveCategory = async (event: any) => {
         life: 3000
       })
     } else {
-      // Добавление новой категории - используем эндпоинт без user_id
       await instance.post('/categories/create', {
         name: formValues.name,
         color: "#"+formValues.color
@@ -260,7 +239,7 @@ const saveCategory = async (event: any) => {
     }
 
     hideDialog()
-    fetchCategories() // Обновляем список категорий
+    fetchCategories()
   } catch (error: any) {
     console.error('Ошибка при сохранении категории:', error)
     displayErrorToast(error.response?.data?.detail || 'Не удалось сохранить категорию')
@@ -269,7 +248,6 @@ const saveCategory = async (event: any) => {
   }
 }
 
-// Подтверждение удаления категории
 const confirmDelete = (categoryData: CategoryModel) => {
   confirm.require({
     message: `Вы уверены, что хотите удалить категорию "${categoryData.name}"?`,
@@ -292,11 +270,9 @@ const confirmDelete = (categoryData: CategoryModel) => {
   })
 }
 
-// Удаление категории
 const deleteCategory = async (categoryData: CategoryModel) => {
   try {
     loading.value = true
-    // Используем новый эндпоинт для удаления: /api/v1/categories/{category_id}
     await instance.delete(`/categories/${categoryData.id}`)
 
     toast.add({
@@ -306,7 +282,7 @@ const deleteCategory = async (categoryData: CategoryModel) => {
       life: 3000
     })
     
-    fetchCategories() // Обновляем список категорий
+    fetchCategories()
   } catch (error: any) {
     console.error('Ошибка при удалении категории:', error)
     displayErrorToast(error.response?.data?.detail || 'Не удалось удалить категорию')
@@ -315,7 +291,6 @@ const deleteCategory = async (categoryData: CategoryModel) => {
   }
 }
 
-// Отображение ошибки
 const displayErrorToast = (msg: string) => {
   toast.add({
     severity: 'error',
@@ -325,7 +300,6 @@ const displayErrorToast = (msg: string) => {
   })
 }
 
-// Call fetchCategories when component mounts
 onMounted(() => {
   fetchCategories()
 })
@@ -348,7 +322,6 @@ onMounted(() => {
   }
 }
 
-/* Компактные цветовые индикаторы */
 .color-dot {
   display: inline-block;
   width: 0.75rem;
@@ -357,7 +330,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* Предпросмотр цвета в модальном окне */
 .color-preview {
   display: inline-block;
   width: 1.5rem;
@@ -366,12 +338,10 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* Более компактные и стильные кнопки */
 :deep(.p-button.p-button-sm .p-button-icon) {
   font-size: 0.875rem;
 }
 
-/* DataTable стили */
 :deep(.p-datatable .p-datatable-tbody > tr) {
   cursor: pointer;
 }
