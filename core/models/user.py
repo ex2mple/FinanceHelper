@@ -1,6 +1,6 @@
 from sqlalchemy import String, ForeignKey, Integer
 from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class User(Base):
@@ -10,4 +10,13 @@ class User(Base):
     age: Mapped[int] = mapped_column(Integer)
     salary: Mapped[int] = mapped_column(Integer)
     email: Mapped[str] = mapped_column(String, unique=True)
-    # role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=1)
+
+    advices: Mapped["Advice"] = relationship(
+        back_populates="user", uselist=True, cascade="all, delete-orphan"
+    )
+    categories: Mapped["Category"] = relationship(
+        back_populates="user", uselist=True, cascade="all, delete-orphan"
+    )
+    transactions: Mapped["Transaction"] = relationship(
+        back_populates="user", uselist=True, cascade="all, delete-orphan"
+    )

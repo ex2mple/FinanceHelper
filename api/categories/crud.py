@@ -4,8 +4,10 @@ from sqlalchemy import select, or_
 from .schemas import CategoryCreate, CategorySelfUpdate
 
 
-async def create_category(session: AsyncSession, category_in: CategoryCreate) -> Category:
-    category = Category(**category_in.model_dump())
+async def create_category(session: AsyncSession, category_in: CategoryCreate,
+                          user_id: int) -> Category:
+    category = Category(user_id=user_id,
+                        **category_in.model_dump())
     session.add(category)
     await session.commit()
     return category

@@ -1,16 +1,18 @@
 from pydantic import BaseModel, Field
 from typing import Annotated
 
+from api.users.schemas import UserBase
+
 
 class CategoryBase(BaseModel):
     id: int
     user_id: int
     name: str
     color: str
+    user: UserBase
 
 
 class CategoryCreate(BaseModel):
-    user_id: Annotated[int, Field(...)]
     name: Annotated[str, Field(...)]
     color: Annotated[str, Field(...)]
 

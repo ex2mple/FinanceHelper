@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import CategoryCreate, CategoryBase, CategorySelfUpdate
 from .crud import create_category, get_user_categories, get_category, update_category, delete_category
 from core.models import db_helper, User, Category
-
+from ..auth.views import user_dependency
 
 router = APIRouter(tags=["Categories"])
 
@@ -14,22 +14,48 @@ router = APIRouter(tags=["Categories"])
 @router.post("/create", response_model=CategoryBase, status_code=status.HTTP_201_CREATED)
 async def create_new_category(
         category_in: CategoryCreate,
+        current_user: user_dependency,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> CategoryBase:
     """
     Создание новой категории.
     """
-    stmt = select(User).where(User.id == category_in.user_id)
+    category = await create_category(session=session, category_in=category_in, user_id=current_user.id)
+    return category
+
+
+@router.post("/create/{user_id}", response_model=CategoryBase, status_code=status.HTTP_201_CREATED)
+async def create_new_category_custom_user_id(
+        user_id: Annotated[int, Path()],
+        category_in: CategoryCreate,
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> CategoryBase:
+    """
+    Создание новой категории.
+    """
+    stmt = select(User).where(User.id == user_id)
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    category = await create_category(session=session, category_in=category_in)
+    category = await create_category(session=session, category_in=category_in, user_id=user_id)
     return category
 
 
-@router.get("/{user_id}", response_model=list[CategoryBase])
+@router.get("/my", response_model=list[CategoryBase])
 async def get_categories_by_user(
+        current_user: user_dependency,
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[CategoryBase]:
+    """
+    Получение списка категорий пользователя.
+    """
+    categories = await get_user_categories(session=session, user_id=current_user.id)
+    return categories
+
+
+@router.get("/{user_id}", response_model=list[CategoryBase])
+async def get_categories_by_custom_user_id(
         user_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> list[CategoryBase]:

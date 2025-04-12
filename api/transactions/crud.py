@@ -10,8 +10,10 @@ from ..categories.crud import get_category
 from ..utils.datetime_utils import make_timezone_aware
 
 
-async def create_transaction(session: AsyncSession, transaction_in: TransactionCreate) -> Transaction:
-    transaction = Transaction(**transaction_in.model_dump())
+async def create_transaction(session: AsyncSession, transaction_in: TransactionCreate,
+                             user_id: int) -> Transaction:
+    transaction = Transaction(user_id=user_id,
+                              **transaction_in.model_dump())
     session.add(transaction)
     await session.commit()
     return transaction
@@ -41,6 +43,8 @@ async def get_transaction(session: AsyncSession, transaction_id: int) -> Transac
 
 async def update_transaction(session: AsyncSession, transaction: Transaction,
                              transaction_in: TransactionSelfUpdate) -> Transaction:
+    if transaction_in.user_id is not None:
+        transaction.user_id = transaction_in.user_id
     if transaction_in.category_id is not None:
         transaction.category_id = transaction_in.category_id
     if transaction_in.datetime is not None:
