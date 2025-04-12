@@ -46,6 +46,7 @@
             <Textarea 
               v-model="userInput" 
               placeholder="Введите сообщение..." 
+              maxlength="250"
               autoResize 
               rows="1"
               class="chat-input"

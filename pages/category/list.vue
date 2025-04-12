@@ -69,12 +69,13 @@
         </DataTable>
         <Dialog
             v-model:visible="categoryDialog"
-            :style="{ width: '450px' }"
+            :style="{ width: '90%', maxWidth: '450px' }"
             :header="isEditMode ? 'Редактирование категории' : 'Создание категории'"
             :modal="true"
             class="p-fluid"
             :dismissableMask="true"
             :closeOnEscape="true"
+            :breakpoints="{ '960px': '75vw', '640px': '90vw' }"
         >
           <div class="p-fluid">
             <Form 
@@ -129,12 +130,22 @@
             </Form>
           </div>
         </Dialog>
-        <ConfirmDialog>
+        <ConfirmDialog
+            :style="{ width: '90%', maxWidth: '450px' }"
+            class="p-fluid"
+            :closeOnEscape="true"
+            :breakpoints="{ '960px': '75vw', '640px': '90vw' }">
           <template #message="slotProps">
-                <div class="flex flex-col items-center w-full gap-4 border-b border-surface-200 dark:border-surface-700">
-                  <i :class="slotProps.message.icon" class="text-5xl text-primary-500"></i>
-                  <p class="pb-4">{{ slotProps.message.message }}</p>
-                </div>
+            <div class="flex flex-col items-center text-center p-4">
+              <i :class="slotProps.message.icon" class="text-3xl text-yellow-500 mb-3"></i>
+              <p class="text-base">{{ slotProps.message.message }}</p>
+            </div>
+          </template>
+          <template #footer="{ reject, accept }">
+            <div class="flex justify-center gap-2 pt-3">
+              <Button label="Нет" icon="pi pi-times" outlined size="small" @click="reject" />
+              <Button label="Да" icon="pi pi-check" severity="danger" size="small" @click="accept" />
+            </div>
           </template>
         </ConfirmDialog>
       </template>
