@@ -3,6 +3,8 @@ from api.users import schemas, crud
 from core.models import db_helper, User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import JSONResponse
+
+from .crud import get_user_by_email
 from .dependencies import user_by_id, user_by_username, user_by_email
 from ..auth.security import get_password_hash
 from ..auth.views import user_dependency
@@ -19,6 +21,9 @@ async def create_user(
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> schemas.UserBase:
     user.password = get_password_hash(user.password)
+    user_check = await get_user_by_email(session=session, email=user.email)
+    if user_check is not None:
+        raise HTTPException(status_code=401, detail="User already exist")
     await crud.create_user(session=session, user_in=user)
     raise HTTPException(
         status_code=status.HTTP_201_CREATED,

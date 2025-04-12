@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 class User(Base):
-    username: Mapped[str] = mapped_column(String(30), unique=True)
+    username: Mapped[str] = mapped_column(String(30))
     password: Mapped[str] = mapped_column(String(255))
     gender: Mapped[str] = mapped_column(String)
     age: Mapped[int] = mapped_column(Integer)
