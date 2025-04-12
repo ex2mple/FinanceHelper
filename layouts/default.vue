@@ -3,6 +3,7 @@
     <Menubar :model="items">
       <template #item="{ item, props, hasSubmenu, root }">
         <a v-ripple class="flex items-center" v-bind="props.action">
+          <i v-if="item.icon" :class="['mr-2', item.icon]"></i>
           <span>{{ item.label }}</span>
           <Badge
             v-if="item.badge"
@@ -24,9 +25,20 @@
         </a>
       </template>
       <template #end>
-        <NuxtLink class="flex items-center gap-2" to="/">
-          <Avatar :image="API + '/avatar'" shape="circle" />
-        </NuxtLink>
+        <div class="flex items-center gap-4">
+          <NuxtLink class="flex items-center" to="/chat">
+            <i class="pi pi-comments text-lg"></i>
+            <span class="ml-1">Советник</span>
+          </NuxtLink>
+          <Button 
+            icon="pi pi-sign-out" 
+            class="p-button-rounded p-button-text p-button-danger" 
+            @click="logout" 
+            aria-label="Выйти"
+            tooltip="Выйти"
+            tooltipPosition="bottom"
+          />
+        </div>
       </template>
     </Menubar>
   </header>
@@ -39,9 +51,47 @@ import { API } from '~/constants/Api'
 const items = ref([
   {
     label: 'Главная',
+    icon: 'pi pi-home',
     command: () => {
       return navigateTo('/')
     },
   },
+  {
+    label: 'Транзакции',
+    icon: 'pi pi-wallet',
+    items: [
+      {
+        label: 'Список транзакций',
+        icon: 'pi pi-list',
+        command: () => {
+          return navigateTo('/transactions')
+        },
+      },
+      {
+        label: 'Добавить транзакцию',
+        icon: 'pi pi-plus',
+        command: () => {
+          return navigateTo('/transactions/add')
+        },
+      }
+    ]
+  },
+  {
+    label: 'Категории',
+    icon: 'pi pi-tags',
+    command: () => {
+      return navigateTo('/category/list')
+    },
+  }
 ])
+
+const logout = () => {
+  navigateTo('/auth/login')
+}
 </script>
+
+<style scoped>
+.p-menubar :deep(.p-menubar-end) {
+  margin-left: auto;
+}
+</style>
