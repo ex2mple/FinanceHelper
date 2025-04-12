@@ -25,10 +25,6 @@ async def create_user(
     if user_check is not None:
         raise HTTPException(status_code=401, detail="User already exist")
     await crud.create_user(session=session, user_in=user)
-    raise HTTPException(
-        status_code=status.HTTP_201_CREATED,
-        detail="User created successfully",
-    )
 
 
 @router.patch("/update", status_code=status.HTTP_204_NO_CONTENT)

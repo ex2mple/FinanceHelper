@@ -1,12 +1,21 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from api import router as v1_router
+from api.utils.system import create_system_user_and_categories
 from core.config import settings
 from fastapi.middleware.cors import CORSMiddleware
+
+from core.models import db_helper
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    session = await db_helper.session_dependency()
+    await create_system_user_and_categories(session)
+    await session.close()
     yield
 
 

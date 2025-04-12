@@ -35,6 +35,7 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> User:
     user = (await session.scalars(stmt)).first()
     return user
 
+
 async def get_user_by_email(session: AsyncSession, email: str | EmailStr) -> User:
     stmt = (select(User)
             .options(selectinload(User.transactions))
