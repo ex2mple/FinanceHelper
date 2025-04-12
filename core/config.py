@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     SQUARE_SIZE: int = 256
     mistral_api_key: str = "20vEo5bCNAvcJznBwpJ7Py0i53ngdy3X"
-    mistral_default_agent_id: str = "ag:5fe02e86:20250411:untitled-agent:6d9da368"
+    mistral_large_agent_id: str = "ag:5fe02e86:20250411:untitled-agent:6d9da368"
+    mistral_small_agent_id: str = "ag:5fe02e86:20250412:small:a89db457"
 
     class Config:
         env_file = ".env"
