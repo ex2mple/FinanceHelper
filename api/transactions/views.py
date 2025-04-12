@@ -412,7 +412,7 @@ async def upload_transaction_in_csv(
         errors = []
         category_cache = {}  # Кэш для категорий
 
-        for row_num, row in enumerate(csv_reader, start=2):  # start=2 для учета заголовка как строки 1
+        for row_num, row in enumerate(csv_reader, start=1):
             try:
                 # Получаем данные из строки CSV
                 transaction_type = row.get('transaction_type_cd', '')
@@ -422,6 +422,7 @@ async def upload_transaction_in_csv(
 
                 # Проверяем обязательные поля
                 if not transaction_type or not date_str or not amount_str:
+                    print(f'<{transaction_type}>, <{category_name}>, <{date_str}>, <{amount_str}>')
                     errors.append(f"Строка {row_num}: отсутствуют обязательные поля")
                     continue
 
