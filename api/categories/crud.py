@@ -19,6 +19,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
     stmt = (
         select(Category)
         .options(selectinload(Category.user))
+        .options(selectinload(Category.transactions))
         .filter(or_(Category.user_id == user_id, Category.user_id == -1))
         .order_by(Category.name)
     )
@@ -27,7 +28,10 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
 
 
 async def get_category(session: AsyncSession, category_id: int) -> Category:
-    stmt = select(Category).options(selectinload(Category.user)).where(Category.id == category_id)
+    stmt = (select(Category)
+            .options(selectinload(Category.user))
+            .options(selectinload(Category.transactions))
+            .where(Category.id == category_id))
     category = (await session.scalars(stmt)).first()
     return category
 

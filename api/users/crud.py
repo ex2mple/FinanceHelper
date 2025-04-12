@@ -1,5 +1,7 @@
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from core.models import User
 from sqlalchemy import select
 from .schemas import UserBase, UserCreate, UserSelfUpdate
@@ -16,26 +18,29 @@ async def create_user(session: AsyncSession, user_in: UserCreate) -> User:
 async def get_user_by_username(session: AsyncSession, username: str) -> User:
     stmt = (
         select(User)
-        .where(User.username == username)
-        # .options( Вот здесь можно подключать relationship
-        #     joinedload(User.stats),
-        #     selectinload(User.awards),
-        #     selectinload(User.items),
-        #     # joinedload(User.gp),
-        #     joinedload(User.role),
-        # )
+        .options(selectinload(User.transactions))
+        .options(selectinload(User.categories))
+        .options(selectinload(User.advices))
     )
     user = (await session.scalars(stmt)).first()
     return user
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> User:
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user = (await session.scalars(stmt)).first()
     return user
 
 async def get_user_by_email(session: AsyncSession, email: str | EmailStr) -> User:
-    stmt = select(User).where(User.email == email)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.email == email))
     user = (await session.scalars(stmt)).first()
     return user
 
@@ -43,6 +48,9 @@ async def get_user_by_email(session: AsyncSession, email: str | EmailStr) -> Use
 async def get_user(session: AsyncSession, user_id: int) -> User:
     stmt = (
         select(User)
+        .options(selectinload(User.transactions))
+        .options(selectinload(User.categories))
+        .options(selectinload(User.advices))
         .where(User.id == user_id)
     )
     user = (await session.scalars(stmt)).first()

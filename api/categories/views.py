@@ -35,7 +35,11 @@ async def create_new_category_custom_user_id(
     """
     Создание новой категории.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -64,7 +68,11 @@ async def get_categories_by_custom_user_id(
     """
     Получение списка категорий пользователя.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -116,5 +124,7 @@ async def delete_category_by_id(
     category = await get_category(session=session, category_id=category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    if len(category.transactions) > 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category has transactions and cannot be deleted")
 
     await delete_category(session=session, category=category)

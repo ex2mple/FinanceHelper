@@ -29,6 +29,7 @@ async def create_new_transaction(
     """
     stmt = (select(Category)
             .options(selectinload(Category.user))
+            .options(selectinload(Category.transactions))
             .where(Category.id == transaction_in.category_id))
     category_exists = (await session.scalars(stmt)).first()
     if category_exists is None:
@@ -47,12 +48,18 @@ async def create_new_transaction_custom_user_id(
     """
     Создание новой транзакции.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    stmt = (select(Category).options(selectinload(Category.user))
+    stmt = (select(Category)
+            .options(selectinload(Category.user))
+            .options(selectinload(Category.transactions))
             .where(Category.id == transaction_in.category_id))
     category_exists = (await session.scalars(stmt)).first()
     if category_exists is None:
@@ -86,7 +93,11 @@ async def get_transactions_by_custom_user_id(
     """
     Получение списка транзакций пользователя.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -217,7 +228,11 @@ async def get_filtered_transactions_api_custom_user_id(
     """
         Получение списка транзакций с фильтрацией и сортировкой.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -253,7 +268,11 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
-    stmt = select(User).where(User.id == user_id)
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
     user_exists = (await session.scalars(stmt)).first()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
