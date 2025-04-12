@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class User(Base):
     username: Mapped[str] = mapped_column(String(50))
-    password: Mapped[str] = mapped_column(String(50))
+    password: Mapped[str] = mapped_column(String)
     gender: Mapped[str] = mapped_column(String)
     age: Mapped[int] = mapped_column(Integer)
     salary: Mapped[int] = mapped_column(BigInteger)
