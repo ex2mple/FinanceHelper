@@ -44,6 +44,7 @@ async def update_category(session: AsyncSession, category: Category,
         category.name = category_in.name
     if category_in.color is not None:
         category.color = category_in.color
+    await session.commit()
     await session.refresh(category)
     return category
 

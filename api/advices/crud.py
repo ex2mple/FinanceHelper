@@ -38,6 +38,7 @@ async def update_advice(session: AsyncSession, advice: Advice,
         advice.user_id = advice_in.user_id
     if advice_in.name is not None:
         advice.name = advice_in.name
+    await session.commit()
     await session.refresh(advice)
     return advice
 

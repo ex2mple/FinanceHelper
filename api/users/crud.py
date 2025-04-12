@@ -70,6 +70,7 @@ async def self_update_user(
     if data.password:
         user.password = get_password_hash(data.password)
     await session.commit()
+    await session.refresh(user)
 
 
 async def delete_user(session: AsyncSession, user: UserBase) -> None:

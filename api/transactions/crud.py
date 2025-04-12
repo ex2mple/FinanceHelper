@@ -60,6 +60,7 @@ async def update_transaction(session: AsyncSession, transaction: Transaction,
         transaction.datetime = transaction_in.datetime
     if transaction_in.amount is not None:
         transaction.amount = transaction_in.amount
+    await session.commit()
     await session.refresh(transaction)
     return transaction
 
