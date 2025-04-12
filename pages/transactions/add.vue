@@ -66,6 +66,8 @@
                 class="w-full"
                 :class="{'p-invalid': form.category?.invalid}"
                 placeholder="Выберите категорию"
+                filter
+                filterPlaceholder="Поиск категории"
               >
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="flex align-items-center">
