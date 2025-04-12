@@ -107,7 +107,6 @@
               <div class="field mb-3">
                 <label for="categoryColor" class="font-medium mb-2 block">Цвет</label>
                 <div class="flex items-center gap-2">
-                  <span class="color-preview" :style="{ backgroundColor: form.values?.color || '#4CAF50' }"></span>
                   <ColorPicker
                       id="categoryColor"
                       name="color"
@@ -131,7 +130,7 @@
                     type="submit"
                     label="Сохранить"
                     icon="pi pi-check"
-                    :loading="form.isSubmitting"
+                    :loading="!!form.isSubmitting"
                 />
               </div>
             </Form>
@@ -159,12 +158,13 @@ import { yupResolver } from '@primevue/forms/resolvers/yup'
 import { categorySchema, type CategoryModel } from '~/types/categoryModel'
 import instance from '~/axiosInstance'
 import NothingHere from '~/components/NothingHere.vue'
+import { onMounted, ref } from 'vue' // Added explicit imports
 
 const toast = useToast()
 const confirm = useConfirm()
 const categoryDialog = ref(false)
 const loading = ref(false)
-const selectedCategory = ref(null)
+const selectedCategory = ref<CategoryModel | null>(null)
 const isEditMode = ref(false)
 const categories = ref<CategoryModel[]>([])
 const category = ref<CategoryModel>({ 
@@ -172,23 +172,12 @@ const category = ref<CategoryModel>({
   color: '#4CAF50' 
 })
 const resolver = yupResolver(categorySchema)
-const userId = ref('')
-
-// Получение ID пользователя из localStorage
-onMounted(() => {
-  if (process.client) {
-    userId.value = localStorage.getItem('user_id') || ''
-    fetchCategories()
-  }
-})
 
 // Получение категорий с сервера
 const fetchCategories = async () => {
-  if (!userId.value) return
-  
   loading.value = true
   try {
-    const response = await instance.get(`/categories/${userId.value}`)
+    const response = await instance.get('/api/v1/categories/my')
     categories.value = response.data || []
   } catch (error: any) {
     console.error('Ошибка при загрузке категорий:', error)
@@ -199,7 +188,7 @@ const fetchCategories = async () => {
 }
 
 // Обработчик клика по строке таблицы
-const onRowClick = (event) => {
+const onRowClick = (event: { data: CategoryModel }) => {
   selectedCategory.value = event.data
 }
 
@@ -214,8 +203,8 @@ const openNewCategoryDialog = () => {
 const editCategory = async (categoryData: CategoryModel) => {
   loading.value = true
   try {
-    // Получаем актуальные данные категории с сервера
-    const response = await instance.get(`/categories/${categoryData.id}`)
+    // Используем новый эндпоинт /api/v1/categories/{category_id}
+    const response = await instance.get(`/api/v1/categories/${categoryData.id}`)
     category.value = response.data
     categoryDialog.value = true
     isEditMode.value = true
@@ -233,39 +222,39 @@ const hideDialog = () => {
 }
 
 // Сохранить категорию (добавление или редактирование)
-const saveCategory = async (data: { valid: boolean; values: CategoryModel }) => {
-  if (!data.valid) {
+const saveCategory = async (event: any) => {
+  if (!event.valid) {
     return
   }
 
   loading.value = true
+  const formValues = event.values as CategoryModel;
 
   try {
     if (isEditMode.value) {
       // Редактирование существующей категории
-      await instance.patch(`/categories/${data.values.id}`, {
-        name: data.values.name,
-        color: data.values.color
+      await instance.patch(`/api/v1/categories/${formValues.id}`, {
+        name: formValues.name,
+        color: formValues.color
       })
 
       toast.add({
         severity: 'success',
         summary: 'Успешно',
-        detail: `Категория "${data.values.name}" обновлена`,
+        detail: `Категория "${formValues.name}" обновлена`,
         life: 3000
       })
     } else {
-      // Добавление новой категории
-      await instance.post('/categories/create', {
-        userid: userId.value,
-        name: data.values.name,
-        color: data.values.color
+      // Добавление новой категории - используем эндпоинт без user_id
+      await instance.post('/api/v1/categories/create', {
+        name: formValues.name,
+        color: formValues.color
       })
 
       toast.add({
         severity: 'success',
         summary: 'Успешно',
-        detail: `Категория "${data.values.name}" добавлена`,
+        detail: `Категория "${formValues.name}" добавлена`,
         life: 3000
       })
     }
@@ -307,7 +296,8 @@ const confirmDelete = (categoryData: CategoryModel) => {
 const deleteCategory = async (categoryData: CategoryModel) => {
   try {
     loading.value = true
-    await instance.delete(`/categories/${categoryData.id}`)
+    // Используем новый эндпоинт для удаления: /api/v1/categories/{category_id}
+    await instance.delete(`/api/v1/categories/${categoryData.id}`)
 
     toast.add({
       severity: 'success',
@@ -334,6 +324,11 @@ const displayErrorToast = (msg: string) => {
     life: 3000
   })
 }
+
+// Call fetchCategories when component mounts
+onMounted(() => {
+  fetchCategories()
+})
 </script>
 
 <style scoped>
