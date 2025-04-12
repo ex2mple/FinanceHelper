@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
 from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction, \
     get_filtered_transactions, get_filtered_transactions_grouped
@@ -25,7 +27,9 @@ async def create_new_transaction(
     """
     Создание новой транзакции.
     """
-    stmt = select(Category).where(Category.id == transaction_in.category_id)
+    stmt = (select(Category)
+            .options(selectinload(Category.user))
+            .where(Category.id == transaction_in.category_id))
     category_exists = (await session.scalars(stmt)).first()
     if category_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
@@ -48,7 +52,8 @@ async def create_new_transaction_custom_user_id(
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    stmt = select(Category).where(Category.id == transaction_in.category_id)
+    stmt = (select(Category).options(selectinload(Category.user))
+            .where(Category.id == transaction_in.category_id))
     category_exists = (await session.scalars(stmt)).first()
     if category_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")

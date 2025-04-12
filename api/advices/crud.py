@@ -1,4 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from core.models import Category, Advice
 from sqlalchemy import select, or_
 from .schemas import AdviceSelfUpdate, AdviceCreate
@@ -14,6 +16,7 @@ async def create_advice(session: AsyncSession, advice_in: AdviceCreate) -> Advic
 async def get_user_advices(session: AsyncSession, user_id: int) -> list[Advice]:
     stmt = (
         select(Advice)
+        .options(selectinload(Advice.user))
         .filter(Advice.user_id == user_id)
         .order_by(Advice.datetime.desc())
     )
@@ -22,7 +25,9 @@ async def get_user_advices(session: AsyncSession, user_id: int) -> list[Advice]:
 
 
 async def get_advice(session: AsyncSession, advice_id: int) -> Advice:
-    stmt = select(Advice).where(Advice.id == advice_id)
+    stmt = (select(Advice)
+            .options(selectinload(Advice.user))
+            .where(Advice.id == advice_id))
     advice = (await session.scalars(stmt)).first()
     return advice
 

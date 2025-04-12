@@ -43,7 +43,6 @@ async def get_user_by_email(session: AsyncSession, email: str | EmailStr) -> Use
 async def get_user(session: AsyncSession, user_id: int) -> User:
     stmt = (
         select(User)
-        # .options(joinedload(User.role), joinedload(User.gp))
         .where(User.id == user_id)
     )
     user = (await session.scalars(stmt)).first()

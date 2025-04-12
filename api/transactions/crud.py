@@ -1,7 +1,9 @@
 import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.models import Transaction
+from sqlalchemy.orm import selectinload
+
+from core.models import Transaction, Category
 from sqlalchemy import select
 from .schemas import TransactionCreate, TransactionSelfUpdate
 from sqlalchemy import func
@@ -23,6 +25,8 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
                                 limit: int | None, offset: int | None) -> list[Transaction]:
     stmt = (
         select(Transaction)
+        .options(selectinload(Transaction.category))
+        .options(selectinload(Transaction.user))
         .where(Transaction.user_id == user_id)
         .order_by(Transaction.datetime)
     )
@@ -36,7 +40,10 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
 
 
 async def get_transaction(session: AsyncSession, transaction_id: int) -> Transaction:
-    stmt = select(Transaction).where(Transaction.id == transaction_id)
+    stmt = (select(Transaction)
+            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.user))
+            .where(Transaction.id == transaction_id))
     transaction = (await session.scalars(stmt)).first()
     return transaction
 
@@ -71,7 +78,9 @@ async def get_filtered_transactions(
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
 ) -> list[Transaction]:
-    stmt = select(Transaction)
+    stmt = (select(Transaction)
+            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.user)))
 
     # Фильтрация по user_id
     if user_id is not None:
@@ -107,7 +116,9 @@ async def get_filtered_transactions_grouped(
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
 ) -> list[tuple[str, float | int]]:
-    stmt = select(Transaction.category_id, func.sum(Transaction.amount).label("total_amount"))
+    stmt = (select(Category.name, func.sum(Transaction.amount).label("total_amount"))
+            .options(selectinload(Transaction.category))
+            .options(selectinload(Transaction.user)))
 
     # Фильтрация по user_id
     if user_id is not None:
@@ -124,8 +135,4 @@ async def get_filtered_transactions_grouped(
     # Группировка по category_id
     stmt = stmt.group_by(Transaction.category_id)
     result = (await session.execute(stmt)).all()
-    res = []
-    for cat in result:
-        cat_name = await get_category(session=session, category_id=cat[0])
-        res.append((cat_name.name, cat[1]))
-    return res
+    return result

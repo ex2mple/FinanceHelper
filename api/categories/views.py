@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from .schemas import CategoryCreate, CategoryBase, CategorySelfUpdate
 from .crud import create_category, get_user_categories, get_category, update_category, delete_category
 from core.models import db_helper, User, Category

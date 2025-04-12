@@ -1,4 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from core.models import Category
 from sqlalchemy import select, or_
 from .schemas import CategoryCreate, CategorySelfUpdate
@@ -16,6 +18,7 @@ async def create_category(session: AsyncSession, category_in: CategoryCreate,
 async def get_user_categories(session: AsyncSession, user_id: int) -> list[Category]:
     stmt = (
         select(Category)
+        .options(selectinload(Category.user))
         .filter(or_(Category.user_id == user_id, Category.user_id == -1))
         .order_by(Category.name)
     )
@@ -24,7 +27,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
 
 
 async def get_category(session: AsyncSession, category_id: int) -> Category:
-    stmt = select(Category).where(Category.id == category_id)
+    stmt = select(Category).options(selectinload(Category.user)).where(Category.id == category_id)
     category = (await session.scalars(stmt)).first()
     return category
 
