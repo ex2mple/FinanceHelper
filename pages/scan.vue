@@ -1,13 +1,13 @@
 <template>
-    <div class="h-full mt-4 flex flex-col items-center justify-center relative">
+    <div class="h-[90vh] w-full flex flex-col items-center justify-center relative">
       <Toast />
-      <div class="w-full h-full md:w-auto md:h-auto md:max-w-lg md:mx-auto md:shadow-2xl md:rounded-2xl md:p-8">
-        <h2 class="text-3xl font-extrabold text-center mb-6">Сканер QR-кода</h2>
-        <div class="relative w-full h-full md:w-auto md:h-auto">
-          <video ref="videoRef" class="w-full h-full md:rounded-xl md:shadow-lg" autoplay muted playsinline></video>
+      <div class="w-[90%] h-[90%] max-w-xl max-h-[80vh] flex flex-col md:w-auto md:h-auto md:max-w-lg md:mx-auto md:shadow-2xl md:rounded-2xl md:p-8">
+        <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-4 md:mb-6">Сканер QR-кода</h2>
+        <div class="relative flex-grow w-full h-full md:w-auto md:h-auto">
+          <video ref="videoRef" class="absolute inset-0 object-cover w-full h-full md:relative md:rounded-xl md:shadow-lg" autoplay muted playsinline></video>
           <div class="absolute inset-0 border-4 border-dashed animate-pulse md:rounded-xl pointer-events-none"></div>
         </div>
-        <p class="mt-4 text-center text-gray-600">Направьте камеру на QR-код</p>
+        <p class="mt-3 text-center text-gray-600 md:mt-4">Направьте камеру на QR-код</p>
       </div>
     </div>
   </template>
@@ -59,3 +59,13 @@
     }
   })
   </script>
+
+<style>
+@media (max-width: 768px) {
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+}
+</style>

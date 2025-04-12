@@ -1,5 +1,8 @@
 <template>
   <div class="p-4 min-h-screen font-sans">
+    <!-- Toast компонент для уведомлений -->
+    <Toast />
+    
     <!-- Верхняя панель: Месяц и Фильтры -->
     <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
       <div class="flex items-center gap-2">
@@ -11,6 +14,25 @@
             optionValue="value"
             placeholder="Выберите месяц"
             class="w-[150px] md:w-[180px]"
+        />
+        
+        <!-- Кнопка для загрузки CSV файла -->
+        <Button 
+          icon="pi pi-upload" 
+          label="Импорт CSV" 
+          severity="secondary" 
+          outlined
+          @click="openFileUpload"
+          class="ml-2"
+        />
+        
+        <!-- Скрытый инпут для выбора файла -->
+        <input 
+          type="file" 
+          ref="fileUploader" 
+          accept=".csv" 
+          class="hidden" 
+          @change="handleFileUpload"
         />
       </div>
     </div>
@@ -111,18 +133,19 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
 import Card from 'primevue/card';
-import instance from "~/axiosinstance";
+import Toast from 'primevue/toast';
+import instance from "~/axiosInstance";
+import { useToast } from 'primevue/usetoast';
 
 // --- Данные ---
 // Получаем текущий месяц (0-11)
 const currentMonth = new Date().getMonth();
 const selectedMonth = ref(currentMonth); // Выбранный месяц по умолчанию - текущий
+const toast = useToast();
 
 // Опции для выбора месяца
 const monthOptions = ref([
@@ -141,60 +164,6 @@ const monthOptions = ref([
   {label: 'Все месяцы', value: null}, // Опция для сброса фильтра
 ]);
 
-// Пример данных транзакций (ЗАМЕНИТЕ НА ВАШИ)
-// const allTransactions = ref([
-//   {
-//     id: 1,
-//     date: '2024-04-11',
-//     name: 'О!Эскимо',
-//     category: 'Супермаркеты',
-//     amount: -120,
-//     details: 'Основной счет Tinkoff',
-//     iconUrl: 'https://via.placeholder.com/40/E91E63/FFFFFF?text=O'
-//   },
-//   {
-//     id: 1,
-//     date: '2024-04-11',
-//     name: 'О!Эскимо',
-//     category: 'Супермаркеты',
-//     amount: -120,
-//     details: 'Основной счет Tinkoff',
-//     iconUrl: 'https://via.placeholder.com/40/E91E63/FFFFFF?text=O'
-//   },
-//   {id: 2, date: '2024-04-11', name: 'Арсений Д.', category: 'Переводы', amount: 14000, details: 'MasterCard'},
-//   {id: 3, date: '2024-04-11', name: 'Стрелка', category: 'Транспорт', amount: -72, details: 'Компенсация'},
-//   {
-//     id: 4,
-//     date: '2024-04-09',
-//     name: 'Вкусно — и точка',
-//     category: 'Фастфуд',
-//     amount: -280,
-//     details: 'Основная',
-//     bonus: 2,
-//     iconUrl: 'https://via.placeholder.com/40/FF9800/FFFFFF?text=V'
-//   },
-//   {id: 5, date: '2024-04-09', name: 'Стрелка', category: 'Транспорт', amount: -72, details: 'Компенсация'},
-//   {
-//     id: 6,
-//     date: '2024-04-09',
-//     name: 'Московский метрополитен',
-//     category: 'Местный транспорт',
-//     amount: -595,
-//     details: 'Основной счет Tinkoff'
-//   },
-//   {
-//     id: 7,
-//     date: '2024-04-07',
-//     name: 'Пятерочка',
-//     category: 'Супермаркеты',
-//     amount: -520,
-//     iconUrl: 'https://via.placeholder.com/40/4CAF50/FFFFFF?text=P'
-//   },
-//   {id: 8, date: '2024-04-07', name: 'Зарплата', category: 'Доходы', amount: 51300, details: 'ООО Ромашка'},
-//   {id: 9, date: '2024-03-25', name: 'Яндекс.Такси', category: 'Транспорт', amount: -350},
-//   {id: 10, date: '2024-03-15', name: 'Перевод маме', category: 'Переводы', amount: -5000},
-//
-// ]);
 const allTransactions = ref([]);
 
 onMounted(async () => {
@@ -303,6 +272,50 @@ const groupedTransactions = computed(() => {
   return groups;
 });
 
+// --- Загрузка CSV ---
+const fileUploader = ref(null);
+
+const openFileUpload = () => {
+  fileUploader.value.click();
+};
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  console.log(file)
+  if (!file) return;
+
+  // Создаем FormData для отправки файла
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    toast.add({ severity: 'info', summary: 'Загрузка', detail: 'Загрузка файла...', life: 3000 });
+    
+    // Отправляем файл на сервер
+    const response = await instance.post('/transactions/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    // Обновляем список транзакций после успешной загрузки
+    allTransactions.value = (await instance.get('/transactions/my')).data;
+    
+    // Показываем уведомление об успехе
+    toast.add({ severity: 'success', summary: 'Успешно', detail: 'Файл успешно загружен и данные обновлены', life: 3000 });
+    
+    // Сбрасываем input файла
+    event.target.value = '';
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Ошибка', 
+      detail: `Ошибка при загрузке файла: ${error.response?.data?.message || error.message}`, 
+      life: 5000 
+    });
+  }
+};
 </script>
 
 <style>
