@@ -23,7 +23,7 @@ async def get_user_by_username(session: AsyncSession, username: str) -> User:
         .options(selectinload(User.categories))
         .options(selectinload(User.advices))
     )
-    user = (await session.scalars(stmt)).first()
+    user = (await session.execute(stmt)).scalar_one_or_none()
     return user
 
 
@@ -33,7 +33,7 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> User:
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user = (await session.scalars(stmt)).first()
+    user = (await session.execute(stmt)).scalar_one_or_none()
     return user
 
 
@@ -43,7 +43,7 @@ async def get_user_by_email(session: AsyncSession, email: str | EmailStr) -> Use
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.email == email))
-    user = (await session.scalars(stmt)).first()
+    user = (await session.execute(stmt)).scalar_one_or_none()
     return user
 
 
@@ -55,7 +55,7 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
         .options(selectinload(User.advices))
         .where(User.id == user_id)
     )
-    user = (await session.scalars(stmt)).first()
+    user = (await session.execute(stmt)).scalar_one_or_none()
     return user
 
 

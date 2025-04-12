@@ -40,7 +40,7 @@ async def create_new_category_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -73,7 +73,7 @@ async def get_categories_by_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -135,7 +135,7 @@ async def update_category_by_id_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -188,7 +188,7 @@ async def delete_category_by_id_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -21,7 +23,7 @@ async def get_user_advices(session: AsyncSession, user_id: int) -> list[Advice]:
         .filter(Advice.user_id == user_id)
         .order_by(Advice.datetime.desc())
     )
-    advices_all = (await session.scalars(stmt)).all()
+    advices_all = (await session.execute(stmt)).scalars().all()
     return advices_all
 
 
@@ -29,7 +31,7 @@ async def get_advice(session: AsyncSession, advice_id: int) -> Advice:
     stmt = (select(Advice)
             .options(selectinload(Advice.user))
             .where(Advice.id == advice_id))
-    advice = (await session.scalars(stmt)).first()
+    advice = (await session.execute(stmt)).scalar_one_or_none()
     return advice
 
 

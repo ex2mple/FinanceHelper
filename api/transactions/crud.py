@@ -36,7 +36,7 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
     if limit is not None:
         stmt = stmt.limit(limit)
 
-    transactions_all = (await session.scalars(stmt)).all()
+    transactions_all = (await session.execute(stmt)).scalars().all()
     return transactions_all
 
 
@@ -45,7 +45,7 @@ async def get_transaction(session: AsyncSession, transaction_id: int) -> Transac
             .options(selectinload(Transaction.category))
             .options(selectinload(Transaction.user))
             .where(Transaction.id == transaction_id))
-    transaction = (await session.scalars(stmt)).first()
+    transaction = (await session.execute(stmt)).scalar_one_or_none()
     return transaction
 
 
@@ -117,7 +117,7 @@ async def get_filtered_transactions_grouped(
     user_id: int | None = None,
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
-) -> list[tuple[str, float | int]]:
+) -> list[tuple[str, int]]:
     stmt = (select(Category.name, func.sum(Transaction.amount).label("total_amount"))
             .options(selectinload(Transaction.category))
             .options(selectinload(Transaction.user)))

@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -24,7 +26,7 @@ async def get_user_categories(session: AsyncSession, user_id: int) -> list[Categ
         .filter(or_(Category.user_id == user_id, Category.user_id == -1))
         .order_by(Category.name)
     )
-    categories_all = (await session.scalars(stmt)).all()
+    categories_all = (await session.execute(stmt)).scalars().all()
     return categories_all
 
 
@@ -33,7 +35,7 @@ async def get_category(session: AsyncSession, category_id: int) -> Category:
             .options(selectinload(Category.user))
             .options(selectinload(Category.transactions))
             .where(Category.id == category_id))
-    category = (await session.scalars(stmt)).first()
+    category = (await session.execute(stmt)).scalar_one_or_none()
     return category
 
 

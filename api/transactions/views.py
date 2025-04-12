@@ -1,19 +1,26 @@
+import csv
 import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, UploadFile, File
 from pydantic import Field
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
+from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate, TransactionCSVUpload
 from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction, \
     get_filtered_transactions, get_filtered_transactions_grouped
 from core.models import db_helper, User, Category
 from typing import Optional, Annotated
 
 from ..auth.views import user_dependency
+from ..categories.crud import create_category
+from ..categories.schemas import CategoryCreate
 from ..utils.datetime_utils import make_timezone_aware
+
+from io import StringIO
+
+from ..utils.system import generate_beautiful_color
 
 router = APIRouter(tags=["Transactions"])
 
@@ -31,7 +38,7 @@ async def create_new_transaction(
             .options(selectinload(Category.user))
             .options(selectinload(Category.transactions))
             .where(Category.id == transaction_in.category_id))
-    category_exists = (await session.scalars(stmt)).first()
+    category_exists = (await session.execute(stmt)).scalar_one_or_none()
     if category_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
@@ -53,7 +60,7 @@ async def create_new_transaction_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -61,7 +68,7 @@ async def create_new_transaction_custom_user_id(
             .options(selectinload(Category.user))
             .options(selectinload(Category.transactions))
             .where(Category.id == transaction_in.category_id))
-    category_exists = (await session.scalars(stmt)).first()
+    category_exists = (await session.execute(stmt)).scalar_one_or_none()
     if category_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
@@ -98,7 +105,7 @@ async def get_transactions_by_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -161,7 +168,7 @@ async def update_transaction_by_id_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -209,7 +216,7 @@ async def delete_transaction_by_id_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -253,13 +260,13 @@ async def get_filtered_transactions_api(
     return transactions
 
 
-@router.get("/group", response_model=list[tuple[str, float | int]])
+@router.get("/group", response_model=list[tuple[str, int]])
 async def get_filtered_transactions_grouped_api(
     current_user: user_dependency,
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, float | int]]:
+) -> list[tuple[str, int]]:
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
@@ -299,7 +306,7 @@ async def get_filtered_transactions_api_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -324,13 +331,13 @@ async def get_filtered_transactions_api_custom_user_id(
     return transactions
 
 
-@router.get("/group/{user_id}", response_model=list[tuple[str, float | int]])
+@router.get("/group/{user_id}", response_model=list[tuple[str, int]])
 async def get_filtered_transactions_grouped_api_custom_user_id(
     user_id: Annotated[int, Path()],
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, float | int]]:
+) -> list[tuple[str, int]]:
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
@@ -339,7 +346,7 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
             .options(selectinload(User.categories))
             .options(selectinload(User.advices))
             .where(User.id == user_id))
-    user_exists = (await session.scalars(stmt)).first()
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -361,34 +368,134 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
     return transactions
 
 
-@router.post("/upload", status_code=status.HTTP_200_OK)
-async def upload_avatar(
-        current_user: user_dependency,
-        file: UploadFile = File(...),
-        session: AsyncSession = Depends(db_helper.session_dependency),
-):
-    """Загрузка новых транзакций для авторизованного юзера"""
+@router.post("/upload", status_code=status.HTTP_201_CREATED,
+             response_model=TransactionCSVUpload)
+async def upload_transaction_in_csv(
+    current_user: user_dependency,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> TransactionCSVUpload:
+    """Загрузка новых транзакций из CSV-файла для авторизованного пользователя"""
     try:
-        if not file.content_type.startswith("image/"):
+        if not file.filename.endswith('.csv'):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File must be an image"
+                detail="Файл должен быть в формате CSV"
             )
 
-        image_id = image_storage.upload_image(file)
+        # Типы операций, которые считаются расходами (сумма будет отрицательной)
+        expense_transaction_types = {'ATR', 'ATT', 'FEE', 'GCS', 'PUC', 'RCI', 'RCU', 'RET', 'TOT', 'TRM', 'TRS', 'UCH'}
+        transaction_type_descriptions = {
+            'ADO': 'Пополнение с карты другого банка',
+            'ATR': 'Списание для операции округления',
+            'ATT': 'Пополнение брокерского счёта',
+            'CHB': 'Вознаграждение за операции покупок',
+            'DIN': 'Проценты на остаток по счету',
+            'FEE': 'Комиссия',
+            'PAY': 'Пополнение',
+            'PUC': 'Покупка',
+            'RCI': 'Оплата задолженности по кредиту',
+            'RCU': 'Списание с расчетного счета для оплаты кредита',
+            'RET': 'Перевод',
+            'TOT': 'Перевод на карту другого банка',
+            'TRM': 'Перевод по реквизитам карты через МПС',
+            'TRS': 'Перевод по реквизитам карты',
+            'UCH': 'Оплата услуг'
+        }
 
-        current_user.avatar_id = image_id
-        await db.commit()
+        # Чтение содержимого файла
+        contents = await file.read()
+        contents = contents.decode('utf-8')
+        csv_reader = csv.DictReader(StringIO(contents))
 
-        return {"avatar_id": image_id}
+        created_transactions = []
+        errors = []
+        category_cache = {}  # Кэш для категорий
 
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        for row_num, row in enumerate(csv_reader, start=2):  # start=2 для учета заголовка как строки 1
+            try:
+                # Получаем данные из строки CSV
+                transaction_type = row.get('transaction_type_cd', '')
+                category_name = row.get('loyalty_cashback_category_nm', '')
+                date_str = row.get('real_transaction_dttm', '')
+                amount_str = row.get('transaction_amt_rur', '0')
+
+                # Проверяем обязательные поля
+                if not transaction_type or not date_str or not amount_str:
+                    errors.append(f"Строка {row_num}: отсутствуют обязательные поля")
+                    continue
+
+                # Преобразование категории
+                if not category_name or category_name == '0':
+                    category_name = 'Другое'
+
+                # Преобразование даты в формате DD.MM.YYYY HH:MI в datetime
+                try:
+                    datetime_obj = datetime.datetime.strptime(date_str, '%d.%m.%Y %H:%M')
+                    datetime_obj = make_timezone_aware(datetime_obj)
+                except ValueError:
+                    errors.append(f"Строка {row_num}: неверный формат даты '{date_str}'")
+                    continue
+
+                # Преобразование суммы
+                try:
+                    amount = int(float(amount_str.replace(',', '.')))
+                    # Если тип транзакции подразумевает расход, делаем сумму отрицательной
+                    if transaction_type in expense_transaction_types:
+                        amount = -abs(amount)
+                except ValueError:
+                    errors.append(f"Строка {row_num}: неверный формат суммы '{amount_str}'")
+                    continue
+
+                # Находим или создаем категорию
+                if category_name in category_cache:
+                    category_id = category_cache[category_name]
+                else:
+                    # Ищем категорию по имени (используя LIKE для нечеткого поиска)
+                    stmt = (select(Category)
+                            .filter(Category.name.ilike(f"%{category_name}%"),
+                                    or_(Category.user_id == current_user.id, Category.user_id == -1)))
+                    category = (await session.execute(stmt)).scalar_one_or_none()
+
+                    if not category:
+                        # Создаем новую категорию
+                        category_in = CategoryCreate(name=category_name,
+                                                     color=generate_beautiful_color())
+                        category = await create_category(
+                            session=session,
+                            category_in=category_in,
+                            user_id=current_user.id
+                        )
+
+                    category_id = category.id
+                    category_cache[category_name] = category_id
+
+                # Создаем объект TransactionCreate
+                transaction_data = {
+                    "title": transaction_type_descriptions[transaction_type],
+                    "amount": amount,
+                    "category_id": category_id,
+                    "datetime": datetime_obj
+                }
+
+                transaction_in = TransactionCreate(**transaction_data)
+
+                # Создаем транзакцию
+                transaction = await create_transaction(
+                    session=session,
+                    transaction_in=transaction_in,
+                    user_id=current_user.id
+                )
+                created_transactions.append(transaction)
+
+            except Exception as e:
+                errors.append(f"Строка {row_num}: {str(e)}")
+
+        return TransactionCSVUpload(created_transactions_count=len(created_transactions), errors=errors,
+                                    transactions=created_transactions)
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload avatar: {str(e)}"
+            detail=f"Ошибка обработки файла: {str(e)}"
         )

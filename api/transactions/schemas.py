@@ -12,7 +12,7 @@ class TransactionBase(BaseModel):
     id: int
     user_id: int
     category_id: int
-    title: str
+    title: Annotated[str, Field(..., min_length=3, max_length=100)]
     datetime: datetime.datetime
     amount: int
     user: UserBase
@@ -25,7 +25,7 @@ class TransactionBase(BaseModel):
 
 
 class TransactionCreate(BaseModel):
-    title: Annotated[str, Field(...)]
+    title: Annotated[str, Field(..., min_length=3, max_length=100)]
     category_id: Annotated[int, Field(...)]
     datetime: Annotated[datetime.datetime, Field(...)]
     amount: Annotated[int, Field(...)]
@@ -37,7 +37,7 @@ class TransactionCreate(BaseModel):
 
 
 class TransactionSelfUpdate(BaseModel):
-    title: Annotated[str | None, Field(default=None)]
+    title: Annotated[str | None, Field(default=None, min_length=3, max_length=100)]
     user_id: Annotated[int | None, Field(default=None)]
     category_id: Annotated[int | None, Field(default=None)]
     datetime: Annotated[datetime.datetime | None, Field(default=None)]
@@ -47,3 +47,9 @@ class TransactionSelfUpdate(BaseModel):
     @classmethod
     def validate_datetime(cls, dt: datetime.datetime) -> datetime.datetime:
         return make_timezone_aware(dt)
+
+
+class TransactionCSVUpload(BaseModel):
+    created_transactions_count: int
+    errors: list[str]
+    transactions: list[TransactionBase]
