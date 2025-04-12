@@ -26,7 +26,7 @@ async def create_user(
     return await crud.create_user(session=session, user_in=user)
 
 
-@router.patch("/update", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("/update")
 async def self_user_update(
         data: schemas.UserSelfUpdate,
         current_user: user_dependency,
