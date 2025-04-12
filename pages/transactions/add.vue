@@ -155,7 +155,7 @@ import * as yup from 'yup'
 import {yupResolver} from '@primevue/forms/resolvers/yup'
 import {useToast} from '#imports'
 import {requiredError} from '~/constants/defaultErrorMessages'
-import instance from "~/axiosinstance";
+import instance from "~/axiosInstance";
 
 const transactionSchema = yup.object({
   title: yup.string().required(requiredError),

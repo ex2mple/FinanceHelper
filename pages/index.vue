@@ -123,14 +123,13 @@
 </template>
 
 <script setup>
-import {Placeholder} from 'placeholder';
 import {ref, computed} from 'vue';
 import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Tag from 'primevue/tag';
 import Card from 'primevue/card';
-import instance from "~/axiosinstance.js";
+import instance from "~/axiosInstance";
 
 // --- Данные ---
 // Получаем текущий месяц (0-11)

@@ -213,7 +213,7 @@ const saveCategory = async (event: any) => {
 
   try {
     if (isEditMode.value) {
-      await instance.patch(`/categories/${formValues.id}`, {
+      await instance.patch(`/categories/${category.value.id}`, {
         name: formValues.name,
         color: "#"+formValues.color
       })
