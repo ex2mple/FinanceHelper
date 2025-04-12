@@ -109,17 +109,25 @@
               </Message>
             </div>
 
-            <!-- Описание -->
-            <!--            <div class="col-12 field mb-3">-->
-            <!--              <label for="description" class="font-medium mb-1 block">Описание (необязательно)</label>-->
-            <!--              <Textarea-->
-            <!--                id="description"-->
-            <!--                name="description"-->
-            <!--                rows="2"-->
-            <!--                class="w-full"-->
-            <!--                placeholder="Дополнительная информация о расходе"-->
-            <!--              />-->
-            <!--            </div>-->
+            <div>
+            <label for="type" class="block text-white mb-1">Тип операции</label>
+            <div class="flex justify-content-center">
+              <SelectButton
+                  id="type"
+                  name="type"
+                  :options="[
+                  { label: 'Расход', value: 'expense' },
+                  { label: 'Доход', value: 'income' },
+                ]"
+                  optionLabel="label"
+                  optionValue="value"
+                  :class="{'p-invalid': form.type?.invalid}"
+              />
+            </div>
+            <Message v-if="form.type?.invalid" severity="error" class="mt-2">
+              {{ form.type.error.message }}
+            </Message>
+          </div>
 
             <!-- Кнопки -->
             <div class="col-12 mt-3 grid grid-cols-1 gap-2">
@@ -155,7 +163,7 @@ import * as yup from 'yup'
 import {yupResolver} from '@primevue/forms/resolvers/yup'
 import {useToast} from '#imports'
 import {requiredError} from '~/constants/defaultErrorMessages'
-import instance from "~/axiosInstance";
+import instance from "~/axiosinstance";
 
 const transactionSchema = yup.object({
   title: yup.string().required(requiredError).max(100, 'Максимальная длина 55 символов'),
@@ -190,6 +198,10 @@ const onSubmit = async (data: any) => {
 
   const newData = {...data.values, category_id: data.values.category.id}
   delete newData['category']
+
+  if (data.values.type === "expense") {
+    newData.amount = -newData.amount
+  }
 
   loading.value = true
 

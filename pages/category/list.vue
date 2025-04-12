@@ -100,12 +100,13 @@
                 </Message>
               </div>
               <div class="field mb-3">
-                <label for="categoryColor" class="font-medium mb-2 block">Цвет</label>
+                <label for="color" class="font-medium mb-2 block">Цвет</label>
                 <div class="flex items-center gap-2">
                   <ColorPicker
-                      id="categoryColor"
+                      id="color"
                       name="color"
                       format="hex"
+                      v-model="category.color"
                   />
                 </div>
                 <Message severity="error" v-if="form.color?.invalid" class="mt-2">
@@ -158,7 +159,7 @@ import { useToast } from '#imports'
 import { useConfirm } from 'primevue/useconfirm'
 import { yupResolver } from '@primevue/forms/resolvers/yup'
 import { categorySchema, type CategoryModel } from '~/types/categoryModel'
-import instance from '~/axiosInstance'
+import instance from "~/axiosinstance";
 import NothingHere from '~/components/NothingHere.vue'
 
 const toast = useToast()
@@ -201,6 +202,8 @@ const editCategory = async (categoryData: CategoryModel) => {
   try {
     const response = await instance.get(`/categories/${categoryData.id}`)
     category.value = response.data
+    category.value.color = category.value.color.slice(1, category.value.color.length)
+    console.log(category.value)
     categoryDialog.value = true
     isEditMode.value = true
   } catch (error) {
