@@ -5,7 +5,6 @@
       <template #title>
         <div class="flex items-center justify-between pl-2 p-4">
           <div class="flex items-center gap-2">
-            <!--            <i class="pi pi-tag text-lg"></i>-->
             <span class="text-xl font-medium">Категории расходов</span>
           </div>
           <Button
@@ -33,6 +32,7 @@
             emptyMessage="Нет доступных категорий"
             currentPageReportTemplate="{first} - {last} из {totalRecords}"
             :pageLinkSize="3"
+            :loading="loading"
         >
           <Column field="name" header="Название" :sortable="true">
             <template #body="slotProps">
@@ -76,51 +76,60 @@
             :closeOnEscape="true"
         >
           <div class="p-fluid">
-            <div class="field mb-3">
-              <label for="categoryName" class="font-medium mb-2 block">Название</label>
-              <InputText
-                  id="categoryName"
-                  v-model="category.name"
-                  :class="{'p-invalid': submitted && !category.name}"
-                  autofocus
-                  placeholder="Введите название категории"
-              />
-              <Message severity="error" v-if="submitted && !category.name" class="mt-2">
-                Название категории обязательно
-              </Message>
-            </div>
+            <Form 
+              @submit="saveCategory" 
+              v-slot="form" 
+              :resolver="resolver"
+              :validateOnValueUpdate="false"
+              :validateOnBlur="true" 
+              :initial-values="category"
+            >
+              <div class="field mb-3">
+                <label for="categoryName" class="font-medium mb-2 block">Название</label>
+                <InputText
+                    id="categoryName"
+                    name="name"
+                    :class="{'p-invalid': form.name?.invalid}"
+                    autofocus
+                    placeholder="Введите название категории"
+                />
+                <Message severity="error" v-if="form.name?.invalid" class="mt-2">
+                  {{ form.name.error.message }}
+                </Message>
+              </div>
 
-            <div class="field mb-3">
-              <label for="categoryColor" class="font-medium mb-2 block">Цвет</label>
-              <div class="flex items-center gap-2">
-                <span class="color-preview" :style="{ backgroundColor: category.color }"></span>
-                <ColorPicker
-                    id="categoryColor"
-                    v-model="category.color"
-                    format="hex"
+              <div class="field mb-3">
+                <label for="categoryColor" class="font-medium mb-2 block">Цвет</label>
+                <div class="flex items-center gap-2">
+                  <span class="color-preview" :style="{ backgroundColor: form.values?.color || '#4CAF50' }"></span>
+                  <ColorPicker
+                      id="categoryColor"
+                      name="color"
+                      format="hex"
+                  />
+                </div>
+                <Message severity="error" v-if="form.color?.invalid" class="mt-2">
+                  {{ form.color.error.message }}
+                </Message>
+              </div>
+              
+              <div class="flex justify-end gap-2 mt-4">
+                <Button
+                    type="button"
+                    label="Отмена"
+                    icon="pi pi-times"
+                    text
+                    @click="hideDialog"
+                />
+                <Button
+                    type="submit"
+                    label="Сохранить"
+                    icon="pi pi-check"
+                    :loading="form.isSubmitting"
                 />
               </div>
-              <Message severity="error" v-if="submitted && !category.color" class="mt-2">
-                Выберите цвет категории
-              </Message>
-            </div>
+            </Form>
           </div>
-          <template #footer>
-            <div class="flex justify-end gap-2">
-              <Button
-                  label="Отмена"
-                  icon="pi pi-times"
-                  text
-                  @click="hideDialog"
-              />
-              <Button
-                  label="Сохранить"
-                  icon="pi pi-check"
-                  @click="saveCategory"
-                  :loading="loading"
-              />
-            </div>
-          </template>
         </Dialog>
 
         <!-- Диалог подтверждения удаления -->
@@ -138,54 +147,49 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
-import {useToast} from '#imports'
-import {useConfirm} from 'primevue/useconfirm'
-
-// Схема категории
-interface Category {
-  id: number
-  name: string
-  color: string
-}
-
-// Изначальные категории (такие же, как в форме добавления транзакций)
-const categories = ref<Category[]>([
-  {id: 1, name: 'Продукты', color: '#4CAF50'},
-  {id: 2, name: 'Транспорт', color: '#2196F3'},
-  {id: 3, name: 'Развлечения', color: '#9C27B0'},
-  {id: 4, name: 'Здоровье', color: '#F44336'},
-  {id: 5, name: 'Образование', color: '#FF9800'},
-  {id: 6, name: 'Кафе и рестораны', color: '#795548'},
-  {id: 7, name: 'Коммунальные платежи', color: '#607D8B'},
-  {id: 8, name: 'Одежда', color: '#E91E63'},
-  {id: 9, name: 'Прочее', color: '#9E9E9E'},
-  {id: 10, name: 'Транспорт', color: '#2196F3'},
-  {id: 11, name: 'Развлечения', color: '#9C27B0'},
-  {id: 12, name: 'Здоровье', color: '#F44336'},
-  {id: 13, name: 'Образование', color: '#FF9800'},
-  {id: 14, name: 'Кафе и рестораны', color: '#795548'},
-  {id: 15, name: 'Коммунальные платежи', color: '#607D8B'},
-  {id: 16, name: 'Одежда', color: '#E91E63'},
-  {id: 17, name: 'Прочее', color: '#9E9E9E'},
-])
+import { useToast } from '#imports'
+import { useConfirm } from 'primevue/useconfirm'
+import { yupResolver } from '@primevue/forms/resolvers/yup'
+import { categorySchema, type CategoryModel } from '~/types/categoryModel'
+import instance from '~/axiosInstance'
 
 const toast = useToast()
 const confirm = useConfirm()
 const categoryDialog = ref(false)
-const submitted = ref(false)
 const loading = ref(false)
 const selectedCategory = ref(null)
 const isEditMode = ref(false)
+const categories = ref<CategoryModel[]>([])
+const category = ref<CategoryModel>({ 
+  name: '', 
+  color: '#4CAF50' 
+})
+const resolver = yupResolver(categorySchema)
+const userId = ref('')
 
-// Пустая категория для создания новой
-const emptyCategoryTemplate = {
-  id: null,
-  name: '',
-  color: '#4CAF50' // Цвет по умолчанию
+// Получение ID пользователя из localStorage
+onMounted(() => {
+  if (process.client) {
+    userId.value = localStorage.getItem('user_id') || ''
+    fetchCategories()
+  }
+})
+
+// Получение категорий с сервера
+const fetchCategories = async () => {
+  if (!userId.value) return
+  
+  loading.value = true
+  try {
+    const response = await instance.get(`/categories/${userId.value}`)
+    categories.value = response.data || []
+  } catch (error: any) {
+    console.error('Ошибка при загрузке категорий:', error)
+    displayErrorToast('Не удалось загрузить категории')
+  } finally {
+    loading.value = false
+  }
 }
-
-const category = ref({...emptyCategoryTemplate})
 
 // Обработчик клика по строке таблицы
 const onRowClick = (event) => {
@@ -194,118 +198,109 @@ const onRowClick = (event) => {
 
 // Открыть диалог создания новой категории
 const openNewCategoryDialog = () => {
-  category.value = {...emptyCategoryTemplate}
-  submitted.value = false
+  category.value = { name: '', color: '#4CAF50' }
   categoryDialog.value = true
   isEditMode.value = false
 }
 
 // Открыть диалог редактирования категории
-const editCategory = (categoryData) => {
-  category.value = {...categoryData}
-  categoryDialog.value = true
-  isEditMode.value = true
+const editCategory = async (categoryData: CategoryModel) => {
+  loading.value = true
+  try {
+    // Получаем актуальные данные категории с сервера
+    const response = await instance.get(`/categories/${categoryData.id}`)
+    category.value = response.data
+    categoryDialog.value = true
+    isEditMode.value = true
+  } catch (error) {
+    console.error('Ошибка при получении данных категории:', error)
+    displayErrorToast('Не удалось загрузить данные категории')
+  } finally {
+    loading.value = false
+  }
 }
 
 // Скрыть диалог
 const hideDialog = () => {
   categoryDialog.value = false
-  submitted.value = false
 }
 
 // Сохранить категорию (добавление или редактирование)
-const saveCategory = async () => {
-  submitted.value = true
-
-  if (!category.value.name || !category.value.color) {
+const saveCategory = async (data: { valid: boolean; values: CategoryModel }) => {
+  if (!data.valid) {
     return
   }
 
   loading.value = true
 
   try {
-    // Симуляция API-запроса
-    await new Promise(resolve => setTimeout(resolve, 500))
-
     if (isEditMode.value) {
       // Редактирование существующей категории
-      const index = categories.value.findIndex(c => c.id === category.value.id)
-      if (index !== -1) {
-        categories.value[index] = {...category.value}
-
-        toast.add({
-          severity: 'success',
-          summary: 'Успешно',
-          detail: `Категория "${category.value.name}" обновлена`,
-          life: 3000
-        })
-      }
-    } else {
-      // Добавление новой категории
-      const newId = Math.max(0, ...categories.value.map(c => c.id)) + 1
-      const newCategory = {
-        id: newId,
-        name: category.value.name,
-        color: category.value.color
-      }
-
-      categories.value.push(newCategory)
+      await instance.patch(`/categories/${data.values.id}`, {
+        name: data.values.name,
+        color: data.values.color
+      })
 
       toast.add({
         severity: 'success',
         summary: 'Успешно',
-        detail: `Категория "${category.value.name}" добавлена`,
+        detail: `Категория "${data.values.name}" обновлена`,
+        life: 3000
+      })
+    } else {
+      // Добавление новой категории
+      await instance.post('/categories/create', {
+        userid: userId.value,
+        name: data.values.name,
+        color: data.values.color
+      })
+
+      toast.add({
+        severity: 'success',
+        summary: 'Успешно',
+        detail: `Категория "${data.values.name}" добавлена`,
         life: 3000
       })
     }
 
     hideDialog()
-  } catch (error) {
+    fetchCategories() // Обновляем список категорий
+  } catch (error: any) {
     console.error('Ошибка при сохранении категории:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Ошибка',
-      detail: 'Не удалось сохранить категорию',
-      life: 3000
-    })
+    displayErrorToast(error.response?.data?.detail || 'Не удалось сохранить категорию')
   } finally {
     loading.value = false
   }
 }
 
 // Подтверждение удаления категории
-const confirmDelete = (categoryData) => {
+const confirmDelete = (categoryData: CategoryModel) => {
   confirm.require({
     message: `Вы уверены, что хотите удалить категорию "${categoryData.name}"?`,
     header: 'Подтверждение удаления',
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
-            label: 'Нет',
-            icon: 'pi pi-times',
-            outlined: true,
-            size: 'small'
-        },
-        acceptProps: {
-            label: 'Да',
-            icon: 'pi pi-check',
-            size: 'small'
-        },
+      label: 'Нет',
+      icon: 'pi pi-times',
+      outlined: true,
+      size: 'small'
+    },
+    acceptProps: {
+      label: 'Да',
+      icon: 'pi pi-check',
+      size: 'small'
+    },
     acceptClass: 'p-button-danger',
     accept: () => deleteCategory(categoryData),
-    reject: () => {
-    }
+    reject: () => {}
   })
 }
 
 // Удаление категории
-const deleteCategory = async (categoryData) => {
+const deleteCategory = async (categoryData: CategoryModel) => {
   try {
     loading.value = true
-
-    // Симуляция API-запроса
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    categories.value = categories.value.filter(c => c.id !== categoryData.id)
+    await instance.delete(`/categories/${categoryData.id}`)
 
     toast.add({
       severity: 'success',
@@ -313,17 +308,24 @@ const deleteCategory = async (categoryData) => {
       detail: `Категория "${categoryData.name}" удалена`,
       life: 3000
     })
-  } catch (error) {
+    
+    fetchCategories() // Обновляем список категорий
+  } catch (error: any) {
     console.error('Ошибка при удалении категории:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Ошибка',
-      detail: 'Не удалось удалить категорию',
-      life: 3000
-    })
+    displayErrorToast(error.response?.data?.detail || 'Не удалось удалить категорию')
   } finally {
     loading.value = false
   }
+}
+
+// Отображение ошибки
+const displayErrorToast = (msg: string) => {
+  toast.add({
+    severity: 'error',
+    summary: 'Ошибка',
+    detail: msg,
+    life: 3000
+  })
 }
 </script>
 
