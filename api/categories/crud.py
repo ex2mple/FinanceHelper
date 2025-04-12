@@ -12,6 +12,7 @@ async def create_category(session: AsyncSession, category_in: CategoryCreate,
                         **category_in.model_dump())
     session.add(category)
     await session.commit()
+    await session.refresh(category, ["transactions", "user"])
     return category
 
 
@@ -45,7 +46,7 @@ async def update_category(session: AsyncSession, category: Category,
     if category_in.color is not None:
         category.color = category_in.color
     await session.commit()
-    await session.refresh(category)
+    await session.refresh(category, ["transactions", "user"])
     return category
 
 

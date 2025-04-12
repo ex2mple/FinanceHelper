@@ -49,7 +49,7 @@ async def create_system_user_and_categories(session: AsyncSession) -> None:
     )
     session.add(user)
     await session.commit()
-    await session.refresh(user)
+    await session.refresh(user, ["transactions", "advices", "categories"])
     print('Системный юзер создан.')
 
     default_categories = ['Супермаркеты', 'Рестораны', 'Фастфуд', 'Красота', 'Косметика', 'Дом и ремонт',
@@ -62,5 +62,6 @@ async def create_system_user_and_categories(session: AsyncSession) -> None:
         new_cat = Category(user_id=user.id, name=cat,
                            color=generate_beautiful_color())
         session.add(new_cat)
-    await session.commit()
+        await session.commit()
+        await session.refresh(new_cat, ["transactions", "user"])
     print('Дефолтные категории созданы.')

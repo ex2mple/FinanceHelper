@@ -12,6 +12,7 @@ async def create_user(session: AsyncSession, user_in: UserCreate) -> User:
     user = User(**user_in.model_dump())
     session.add(user)
     await session.commit()
+    await session.refresh(user, ["transactions", "advices", "categories"])
     return user
 
 
@@ -70,7 +71,7 @@ async def self_update_user(
     if data.password:
         user.password = get_password_hash(data.password)
     await session.commit()
-    await session.refresh(user)
+    await session.refresh(user, ["transactions", "advices", "categories"])
     return user
 
 

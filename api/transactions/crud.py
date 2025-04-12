@@ -18,6 +18,7 @@ async def create_transaction(session: AsyncSession, transaction_in: TransactionC
                               **transaction_in.model_dump())
     session.add(transaction)
     await session.commit()
+    await session.refresh(transaction, ["category", "user"])
     return transaction
 
 
@@ -61,7 +62,7 @@ async def update_transaction(session: AsyncSession, transaction: Transaction,
     if transaction_in.amount is not None:
         transaction.amount = transaction_in.amount
     await session.commit()
-    await session.refresh(transaction)
+    await session.refresh(transaction, ["category", "user"])
     return transaction
 
 

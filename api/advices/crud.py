@@ -10,6 +10,7 @@ async def create_advice(session: AsyncSession, advice_in: AdviceCreate) -> Advic
     advice = Advice(**advice_in.model_dump())
     session.add(advice)
     await session.commit()
+    await session.refresh(advice, ["user"])
     return advice
 
 
@@ -39,7 +40,7 @@ async def update_advice(session: AsyncSession, advice: Advice,
     if advice_in.name is not None:
         advice.name = advice_in.name
     await session.commit()
-    await session.refresh(advice)
+    await session.refresh(advice, ["user"])
     return advice
 
 

@@ -1,6 +1,6 @@
 import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, UploadFile, File
 from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -359,3 +359,36 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
         end_date=end_date,
     )
     return transactions
+
+
+@router.post("/upload", status_code=status.HTTP_200_OK)
+async def upload_avatar(
+        current_user: user_dependency,
+        file: UploadFile = File(...),
+        session: AsyncSession = Depends(db_helper.session_dependency),
+):
+    """Загрузка новых транзакций для авторизованного юзера"""
+    try:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be an image"
+            )
+
+        image_id = image_storage.upload_image(file)
+
+        current_user.avatar_id = image_id
+        await db.commit()
+
+        return {"avatar_id": image_id}
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload avatar: {str(e)}"
+        )
