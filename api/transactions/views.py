@@ -123,6 +123,7 @@ async def get_transaction_by_id(
 
 @router.patch("/{transaction_id}", response_model=TransactionBase)
 async def update_transaction_by_id(
+        current_user: user_dependency,
         transaction_id: Annotated[int, Path()],
         transaction_in: TransactionSelfUpdate,
         session: AsyncSession = Depends(db_helper.session_dependency),
@@ -134,12 +135,46 @@ async def update_transaction_by_id(
     if not transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
 
+    if transaction.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't update this transaction")
+
+    updated_transaction = await update_transaction(session=session, transaction=transaction, transaction_in=transaction_in)
+    return updated_transaction
+
+
+@router.patch("/{transaction_id}/user/{user_id}", response_model=TransactionBase)
+async def update_transaction_by_id_custom_user_id(
+        transaction_id: Annotated[int, Path()],
+        user_id: Annotated[int, Path()],
+        transaction_in: TransactionSelfUpdate,
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> TransactionBase:
+    """
+    Обновление транзакции по ID.
+    """
+    transaction = await get_transaction(session=session, transaction_id=transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.scalars(stmt)).first()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if transaction.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't update this transaction")
+
     updated_transaction = await update_transaction(session=session, transaction=transaction, transaction_in=transaction_in)
     return updated_transaction
 
 
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_transaction_by_id(
+        current_user: user_dependency,
         transaction_id: Annotated[int, Path()],
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> None:
@@ -149,6 +184,37 @@ async def delete_transaction_by_id(
     transaction = await get_transaction(session=session, transaction_id=transaction_id)
     if not transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+
+    if transaction.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't delete this transaction")
+
+    await delete_transaction(session=session, transaction=transaction)
+
+
+@router.delete("/{transaction_id}/user/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_transaction_by_id_custom_user_id(
+    transaction_id: Annotated[int, Path()],
+    user_id: Annotated[int, Path()],
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> None:
+    """
+    Удаление транзакции по ID.
+    """
+    transaction = await get_transaction(session=session, transaction_id=transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.scalars(stmt)).first()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if transaction.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't delete this transaction")
 
     await delete_transaction(session=session, transaction=transaction)
 

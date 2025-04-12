@@ -98,6 +98,7 @@ async def get_category_by_id(
 
 @router.patch("/{category_id}", response_model=CategoryBase)
 async def update_category_by_id(
+        current_user: user_dependency,
         category_id: Annotated[int, Path()],
         category_in: CategorySelfUpdate,
         session: AsyncSession = Depends(db_helper.session_dependency),
@@ -108,6 +109,38 @@ async def update_category_by_id(
     category = await get_category(session=session, category_id=category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    if category.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't update this category")
+
+    updated_category = await update_category(session=session, category=category, category_in=category_in)
+    return updated_category
+
+
+@router.patch("/{category_id}/user/{user_id}", response_model=CategoryBase)
+async def update_category_by_id_custom_user_id(
+        category_id: Annotated[int, Path()],
+        user_id: Annotated[int, Path()],
+        category_in: CategorySelfUpdate,
+        session: AsyncSession = Depends(db_helper.session_dependency),
+) -> CategoryBase:
+    """
+    Обновление категории по ID.
+    """
+    category = await get_category(session=session, category_id=category_id)
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.scalars(stmt)).first()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if category.user_id != user_exists.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't update this category")
 
     updated_category = await update_category(session=session, category=category, category_in=category_in)
     return updated_category
@@ -116,6 +149,7 @@ async def update_category_by_id(
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category_by_id(
         category_id: Annotated[int, Path()],
+        current_user: user_dependency,
         session: AsyncSession = Depends(db_helper.session_dependency),
 ) -> None:
     """
@@ -126,6 +160,39 @@ async def delete_category_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
     if category.transactions:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category has transactions and cannot be deleted")
-    if category.user_id == 0:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Default category cannot be deleted")
+
+    if category.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't delete this category")
+
+    await delete_category(session=session, category=category)
+
+
+@router.delete("/{category_id}/user/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_category_by_id_custom_user_id(
+    category_id: Annotated[int, Path()],
+    user_id: Annotated[int, Path()],
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> None:
+    """
+    Удаление категории по ID.
+    """
+    category = await get_category(session=session, category_id=category_id)
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    if category.transactions:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Category has transactions and cannot be deleted")
+
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.scalars(stmt)).first()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if category.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't delete this category")
+
     await delete_category(session=session, category=category)
