@@ -4,7 +4,6 @@ import { emailError, requiredError } from '~/constants/defaultErrorMessages'
 
 export const createUserSchema = yup.object({
   email: yup.string().email(emailError).required(requiredError).max(100, 'Слишком длинный email'),
-  firstName: yup.string().required(requiredError).max(100, 'Слишком длинное имя'),
   password: yup
     .string()
     .min(8, passwordMinLength)

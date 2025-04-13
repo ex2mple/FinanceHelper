@@ -230,11 +230,11 @@ onMounted(async () => {
     // Получаем список категорий
     const response = await instance.get('/categories/my')
     categories.value = response.data
-    
+
     // Проверяем, пришли ли данные со страницы сканирования
     if (route.query.title) {
       prefilled.value = true
-      
+
       // Находим категорию по id из параметров
       if (route.query.category_id && categories.value.length > 0) {
         const categoryId = parseInt(route.query.category_id as string)
@@ -243,7 +243,7 @@ onMounted(async () => {
           formModel.category = selectedCategory
         }
       }
-      
+
       // Заполняем значения формы из query-параметров напрямую в реактивную модель
       formModel.title = route.query.title as string
       formModel.amount = route.query.amount ? parseFloat(route.query.amount as string) : null
@@ -267,25 +267,25 @@ const onSubmit = async (data: { values: any; valid: boolean }) => {
   if (prefilled.value) {
     // Manual validation for pre-filled forms
     const isValid = Boolean(
-      formModel.title && 
-      formModel.amount !== null && 
-      formModel.amount > 0 && 
+      formModel.title &&
+      formModel.amount !== null &&
+      formModel.amount > 0 &&
       formModel.category &&
       formModel.datetime
     )
-    
+
     if (isValid) {
       await submitTransaction()
       return
     }
   }
-  
+
   // Normal validation flow for user-filled forms
   if (!data.valid) {
     // Не выводим уведомление об ошибке валидации
     return
   }
-  
+
   await submitTransaction()
 }
 
@@ -303,7 +303,7 @@ const submitTransaction = async () => {
 
   // Create transaction data object with rounded amount
   const roundedAmount = formModel.amount ? Math.round(Number(formModel.amount)) : 0
-  
+
   const newData = {
     title: formModel.title,
     amount: formModel.type === "expense" ? -Math.abs(roundedAmount) : Math.abs(roundedAmount),
@@ -311,7 +311,7 @@ const submitTransaction = async () => {
     datetime: formModel.datetime,
     type: formModel.type
   }
-  
+
   loading.value = true
 
   try {

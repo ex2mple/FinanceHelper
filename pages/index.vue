@@ -151,7 +151,6 @@
 
 <script setup>
 import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Card from 'primevue/card';
 import Toast from 'primevue/toast';
@@ -288,8 +287,8 @@ const totalIncomeFormatted = computed(() => {
 });
 
 const onTransactionClick = (transaction) => {
-  console.log("Clicked transaction:", transaction);
-  alert(`Клик по транзакции: ${transaction.title} (${formatAmount(transaction.amount)})`);
+  const router = useRouter()
+  router.push('/transactions/' + transaction.id);
 }
 
 const filteredTransactions = computed(() => {
