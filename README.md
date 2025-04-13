@@ -96,7 +96,7 @@ project/
 
 ## Схема базы данных
 
-![DB](readme_assets/db_prod.jpg)
+![DB](readme_assets/diagram.png)
 
 <hr>
 
