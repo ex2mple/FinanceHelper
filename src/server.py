@@ -40,7 +40,7 @@ class OverspendingResponse(BaseModel):
 def get_overspending(
         age: int = Query(..., ge=14, le=80, description="Возраст пользователя"),
         gender: str = Query(..., regex="^[MFmf]$", description="Пол пользователя (M или F)"),
-        income: float = Query(..., ge=0, description="Ежемесячный доход"),
+        income: float = Query(..., ge=0, le=3000, description="Ежемесячный доход"),
         expense_other: float = Query(default=0, description="Фактические траты для категории other"),
         expense_supermarkets: float = Query(default=0, description="Фактические траты для категории supermarkets"),
         expense_restaurants: float = Query(default=0, description="Фактические траты для категории restaurants"),
