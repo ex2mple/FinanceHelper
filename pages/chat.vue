@@ -77,6 +77,7 @@ interface Message {
   isUser: boolean
   timestamp: Date
   isLoading?: boolean
+  id?: number
 }
 
 const userInput = ref('')
@@ -112,17 +113,22 @@ const sendMessage = async () => {
   }
   messages.value.push(userMessage)
   
-  // Add loading message from AI
+  // Clear input
+  const userQuery = userInput.value
+  userInput.value = ''
+  
+  // Add loading message from AI with specific ID
+  const tempId = Date.now()
   const loadingMessage: Message = {
     text: '',
     isUser: false,
     timestamp: new Date(),
-    isLoading: true
+    isLoading: true,
+    id: tempId // Добавляем временный ID для надежной идентификации
   }
-  messages.value.push(loadingMessage)
   
-  // Clear input and scroll to bottom
-  userInput.value = ''
+  // Добавляем в массив сообщений
+  messages.value.push(loadingMessage)
   await scrollToBottom()
   
   // Set loading state
@@ -130,28 +136,50 @@ const sendMessage = async () => {
   error.value = ''
   
   try {
-    // Make API request to the /ai/ask/large endpoint
+    console.log('Отправка запроса:', userQuery)
+    
+    // Сделаем запрос
     const response = await axiosInstance.post('/ai/advice', {
-      request: userMessage.text
+      request: userQuery
     })
     
-    // Replace loading message with actual response
-    const loadingIndex = messages.value.findIndex(m => m.isLoading)
+    console.log('Ответ от сервера:', response.data)
+    
+    // Создаем новое сообщение вместо попытки обновить существующее
+    const aiResponse: Message = {
+      text: response.data,
+      isUser: false,
+      timestamp: new Date(),
+      isLoading: false
+    }
+    
+    // Удаляем сообщение с загрузкой и добавляем новое с ответом
+    const messagesCopy = [...messages.value]
+    const loadingIndex = messagesCopy.findIndex(m => m.id === tempId)
+    
     if (loadingIndex !== -1) {
-      // Полностью заменяем сообщение с индикатором загрузки на сообщение с ответом
-      messages.value.splice(loadingIndex, 1, {
-        text: response.data,
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: false // Явно указываем, что загрузка завершена
-      })
+      messagesCopy.splice(loadingIndex, 1, aiResponse)
+      messages.value = messagesCopy
+      console.log('Сообщение с ответом добавлено, индикатор загрузки удален')
+    } else {
+      console.warn('Не удалось найти сообщение с загрузкой')
+      // На случай, если сообщение с загрузкой не найдено, просто добавим новое
+      messages.value.push(aiResponse)
     }
   } catch (err: any) {
+    console.error('Ошибка запроса:', err)
+    
     // Handle error
     error.value = err.response?.data?.message || 'Не удалось получить ответ от помощника'
     
-    // Remove loading message
-    messages.value = messages.value.filter(m => !m.isLoading)
+    // Remove loading message полностью, используя новый подход
+    const messagesCopy = [...messages.value]
+    const loadingIndex = messagesCopy.findIndex(m => m.id === tempId)
+    
+    if (loadingIndex !== -1) {
+      messagesCopy.splice(loadingIndex, 1)
+      messages.value = messagesCopy
+    }
   } finally {
     isLoading.value = false
     await scrollToBottom()
