@@ -30,6 +30,15 @@ interface Transaction {
 const transactionData = ref<Transaction | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+const isEditing = ref<boolean>(false);
+
+const getNormalizeTransactionData = () => {
+  return {
+    ...transactionData.value,
+    type: transactionData.value?.amount! > 0 ? 'income' : 'expense',
+    amount: Math.abs(transactionData.value?.amount!)
+  };
+}
 
 // --- Загрузка данных ---
 onMounted(async () => {
@@ -90,9 +99,7 @@ const goBack = () => {
 };
 
 const onEditClick = () => {
-  // TODO: Реализовать логику редактирования
-  alert('Редактирование транзакции (не реализовано)');
-  // router.push(`/transactions/${transactionData.value?.id}/edit`);
+  isEditing.value = true;
 };
 
 </script>
@@ -101,7 +108,7 @@ const onEditClick = () => {
   <Toast position="top-right"/>
   <div class="flex justify-center items-start min-h-screen p-4 bg-surface-ground">
     <!-- Карточка транзакции -->
-    <Card v-if="!isLoading && transactionData" class="w-full max-w-[450px] shadow-lg border-0 animate-fadein">
+    <Card v-if="!isLoading && transactionData && !isEditing" class="w-full max-w-[450px] shadow-lg border-0 animate-fadein">
       <!-- Заголовок Карточки (Шапка с кнопкой назад и датой) -->
       <template #title>
         <div class="flex items-center justify-between mb-1">
@@ -118,7 +125,6 @@ const onEditClick = () => {
                 @click="onEditClick"
                 aria-label="Редактировать категорию"
             />
-<!--          <div class="w-8"></div> &lt;!&ndash; Пустой div для выравнивания &ndash;&gt;-->
         </div>
       </template>
 
@@ -168,6 +174,11 @@ const onEditClick = () => {
       <Button label="Попробовать снова" icon="pi pi-refresh" class="p-button-text mt-2" @click="onMounted"/>
       <Button label="На главную" icon="pi pi-home" class="p-button-text mt-2" @click="$router.push('/')"/>
     </div>
+
+    <TransactionForm :transaction="getNormalizeTransactionData()" v-if="isEditing"
+                     @close-form="() => isEditing = false"
+                     @mutate-data="(data) => transactionData = data"
+    />
   </div>
 </template>
 
