@@ -117,8 +117,8 @@ async def get_filtered_transactions_grouped(
     user_id: int | None = None,
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
-) -> list[tuple[str, int]]:
-    stmt = (select(Category.name, func.sum(Transaction.amount).label("total_amount"))
+) -> list[tuple[str, str, int]]:
+    stmt = (select(Category.name, Category.color, func.sum(Transaction.amount).label("total_amount"))
             .join(Category))
 
     # Фильтрация по user_id
@@ -134,6 +134,6 @@ async def get_filtered_transactions_grouped(
         stmt = stmt.where(Transaction.datetime <= end_date)
 
     # Группировка по category_id
-    stmt = stmt.group_by(Category.name)
+    stmt = stmt.group_by(Category.name, Category.color)
     result = (await session.execute(stmt)).all()
     return result
