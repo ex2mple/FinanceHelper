@@ -13,9 +13,8 @@ from core.models import db_helper, Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ЗАКОММЕНТИРОВАТЬ, ЕСЛИ ТАБЛИЦЫ УЖЕ СУЩЕСТВУЮТ
-    # async with db_helper.engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
+    async with db_helper.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     async with db_helper.session_factory() as session:
         await create_system_user_and_categories(session)
     yield
