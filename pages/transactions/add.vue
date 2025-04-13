@@ -19,9 +19,13 @@
             @submit="onSubmit"
             v-slot="form"
             :resolver="resolver"
+            :initialValues="formModel"
             :validateOnValueUpdate="false"
-            :validateOnBlur="true"
+            :validateOnBlur="false"
+            :validateOnSubmit="true"
+            :validateOnMount="false"
             class="p-fluid"
+            ref="formRef"
         >
           <div class="grid">
             <!-- Название -->
@@ -30,12 +34,13 @@
               <InputText
                   id="title"
                   name="title"
+                  v-model="formModel.title"
                   class="w-full"
                   :class="{'p-invalid': form.title?.invalid}"
               />
-              <Message v-if="form.title?.invalid" severity="error" class="mt-2">
+              <small v-if="form.title?.invalid" class="p-error block mt-2">
                 {{ form.title.error.message }}
-              </Message>
+              </small>
             </div>
 
             <!-- Сумма -->
@@ -44,15 +49,18 @@
               <InputNumber
                   id="amount"
                   name="amount"
+                  v-model="formModel.amount"
                   mode="currency"
                   currency="RUB"
                   locale="ru-RU"
+                  :minFractionDigits="0"
+                  :maxFractionDigits="0"
                   class="w-full"
                   :class="{'p-invalid': form.amount?.invalid}"
               />
-              <Message v-if="form.amount?.invalid" severity="error" class="mt-2">
+              <small v-if="form.amount?.invalid" class="p-error block mt-2">
                 {{ form.amount.error.message }}
-              </Message>
+              </small>
             </div>
 
             <!-- Категория -->
@@ -61,6 +69,7 @@
               <Dropdown
                   id="category"
                   name="category"
+                  v-model="formModel.category"
                   :options="categories"
                   optionLabel="name"
                   class="w-full"
@@ -85,9 +94,9 @@
                   </div>
                 </template>
               </Dropdown>
-              <Message v-if="form.category?.invalid" severity="error" class="mt-2">
+              <small v-if="form.category?.invalid" class="p-error block mt-2">
                 {{ form.category.error.message }}
-              </Message>
+              </small>
             </div>
 
             <!-- Дата и время -->
@@ -96,6 +105,7 @@
               <Calendar
                   id="datetime"
                   name="datetime"
+                  v-model="formModel.datetime"
                   showTime
                   hourFormat="24"
                   :showIcon="true"
@@ -104,17 +114,18 @@
                   :maxDate="maxDate"
                   placeholder="Выберите дату и время"
               />
-              <Message v-if="form.datetime?.invalid" severity="error" class="mt-2">
+              <small v-if="form.datetime?.invalid" class="p-error block mt-2">
                 {{ form.datetime.error.message }}
-              </Message>
+              </small>
             </div>
 
             <div>
-            <label for="type" class="block text-white mb-1">Тип операции</label>
+            <label for="type" class="block text-gray-700 mb-1">Тип операции</label>
             <div class="flex justify-content-center">
               <SelectButton
                   id="type"
                   name="type"
+                  v-model="formModel.type"
                   :options="[
                   { label: 'Расход', value: 'expense' },
                   { label: 'Доход', value: 'income' },
@@ -124,9 +135,9 @@
                   :class="{'p-invalid': form.type?.invalid}"
               />
             </div>
-            <Message v-if="form.type?.invalid" severity="error" class="mt-2">
+            <small v-if="form.type?.invalid" class="p-error block mt-2">
               {{ form.type.error.message }}
-            </Message>
+            </small>
           </div>
 
             <!-- Кнопки -->
@@ -160,53 +171,150 @@
 
 <script setup lang="ts">
 import * as yup from 'yup'
-import {yupResolver} from '@primevue/forms/resolvers/yup'
-import {useToast} from '#imports'
-import {requiredError} from '~/constants/defaultErrorMessages'
+import { yupResolver } from '@primevue/forms/resolvers/yup'
+import { useToast, useRoute } from '#imports'
+import { requiredError } from '~/constants/defaultErrorMessages'
 import instance from "~/axiosInstance";
+import { ref, reactive, onMounted } from 'vue'
 
+// Define interfaces for better type safety
+interface Category {
+  id: number;
+  name: string;
+  color: string;
+  [key: string]: any;
+}
+
+interface TransactionFormData {
+  title: string;
+  amount: number | null;
+  category: Category | null;
+  datetime: Date;
+  type: 'expense' | 'income';
+}
+
+// Yup schema for form validation
 const transactionSchema = yup.object({
-  title: yup.string().required(requiredError).max(100, 'Максимальная длина 55 символов'),
+  title: yup.string().required(requiredError).max(100, 'Максимальная длина 100 символов'),
   amount: yup.number().required(requiredError).min(0, 'Сумма должна быть больше 0').max(100000000, 'Слишком много'),
   category: yup.object().required(requiredError),
   datetime: yup.date().required(requiredError).max(new Date(), 'Дата не может быть в будущем'),
 })
 
-
 const resolver = yupResolver(transactionSchema)
 
 const toast = useToast()
+const route = useRoute()
+const router = useRouter()
 
 const maxDate = ref(new Date())
-
 const loading = ref(false)
+const categories = ref<Category[]>([])
+const formRef = ref(null)
 
-const categories = ref()
+// Flag to track if form was pre-filled from QR code
+const prefilled = ref(false)
 
+// Create reactive form model with proper types
+const formModel = reactive<TransactionFormData>({
+  title: '',
+  amount: null,
+  category: null,
+  datetime: new Date(),
+  type: 'expense'
+})
+
+// Проверяем, есть ли данные в query-параметрах (из сканирования чека)
 onMounted(async () => {
   try {
-    categories.value = (await instance.get('/categories/my')).data
+    // Получаем список категорий
+    const response = await instance.get('/categories/my')
+    categories.value = response.data
+    
+    // Проверяем, пришли ли данные со страницы сканирования
+    if (route.query.title) {
+      prefilled.value = true
+      
+      // Находим категорию по id из параметров
+      if (route.query.category_id && categories.value.length > 0) {
+        const categoryId = parseInt(route.query.category_id as string)
+        const selectedCategory = categories.value.find(cat => cat.id === categoryId)
+        if (selectedCategory) {
+          formModel.category = selectedCategory
+        }
+      }
+      
+      // Заполняем значения формы из query-параметров напрямую в реактивную модель
+      formModel.title = route.query.title as string
+      formModel.amount = route.query.amount ? parseFloat(route.query.amount as string) : null
+      formModel.datetime = route.query.datetime ? new Date(route.query.datetime as string) : new Date()
+      formModel.type = (route.query.type as 'expense' | 'income') || 'expense'
+    }
   } catch(error) {
-    console.log(error)
+    console.error('Ошибка при загрузке данных:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка',
+      detail: 'Не удалось загрузить данные категорий',
+      life: 3000
+    })
   }
 })
 
-const onSubmit = async (data: any) => {
+// Submit handler with improved type safety and validation
+const onSubmit = async (data: { values: any; valid: boolean }) => {
+  // For pre-filled forms, bypass validation if data is valid
+  if (prefilled.value) {
+    // Manual validation for pre-filled forms
+    const isValid = Boolean(
+      formModel.title && 
+      formModel.amount !== null && 
+      formModel.amount > 0 && 
+      formModel.category &&
+      formModel.datetime
+    )
+    
+    if (isValid) {
+      await submitTransaction()
+      return
+    }
+  }
+  
+  // Normal validation flow for user-filled forms
   if (!data.valid) {
+    // Не выводим уведомление об ошибке валидации
+    return
+  }
+  
+  await submitTransaction()
+}
+
+// Extracted submission logic with improved error handling
+const submitTransaction = async () => {
+  if (!formModel.category) {
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка',
+      detail: 'Выберите категорию',
+      life: 3000
+    })
     return
   }
 
-  const newData = {...data.values, category_id: data.values.category.id}
-  delete newData['category']
-
-  if (data.values.type === "expense") {
-    newData.amount = -newData.amount
+  // Create transaction data object with rounded amount
+  const roundedAmount = formModel.amount ? Math.round(Number(formModel.amount)) : 0
+  
+  const newData = {
+    title: formModel.title,
+    amount: formModel.type === "expense" ? -Math.abs(roundedAmount) : Math.abs(roundedAmount),
+    category_id: formModel.category.id,
+    datetime: formModel.datetime,
+    type: formModel.type
   }
-
+  
   loading.value = true
 
   try {
-    console.log(newData)
     await instance.post('/transactions/create', newData)
 
     toast.add({
