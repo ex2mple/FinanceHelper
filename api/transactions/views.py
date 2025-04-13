@@ -114,6 +114,148 @@ async def get_transactions_by_custom_user_id(
     return transactions
 
 
+@router.get("/filter", response_model=list[TransactionBase])
+async def get_filtered_transactions_api(
+    current_user: user_dependency,
+    order_by: str = Query(default="asc", regex="^(asc|desc)$"),
+    limit: Optional[int] = Query(default=None, ge=0),
+    offset: Optional[int] = Query(default=None, ge=0),
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[TransactionBase]:
+    """
+        Получение списка транзакций с фильтрацией и сортировкой.
+    """
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
+
+    transactions = await get_filtered_transactions(
+        session=session,
+        user_id=current_user.id,
+        order_by=order_by,
+        limit=limit,
+        offset=offset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
+
+
+@router.get("/filter/{user_id}", response_model=list[TransactionBase])
+async def get_filtered_transactions_api_custom_user_id(
+    user_id: Annotated[int, Path()],
+    order_by: str = Query(default="asc", regex="^(asc|desc)$"),
+    limit: Optional[int] = Query(default=None, ge=0),
+    offset: Optional[int] = Query(default=None, ge=0),
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[TransactionBase]:
+    """
+        Получение списка транзакций с фильтрацией и сортировкой.
+    """
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
+
+    transactions = await get_filtered_transactions(
+        session=session,
+        user_id=user_id,
+        order_by=order_by,
+        limit=limit,
+        offset=offset,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
+
+
+@router.get("/group", response_model=list[tuple[str, int]])
+async def get_filtered_transactions_grouped_api(
+    current_user: user_dependency,
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[tuple[str, int]]:
+    """
+    Получение списка транзакций с фильтрацией и группировкой по id.
+    """
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
+
+    transactions = await get_filtered_transactions_grouped(
+        session=session,
+        user_id=current_user.id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
+
+
+@router.get("/group/{user_id}", response_model=list[tuple[str, int]])
+async def get_filtered_transactions_grouped_api_custom_user_id(
+    user_id: Annotated[int, Path()],
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> list[tuple[str, int]]:
+    """
+    Получение списка транзакций с фильтрацией и группировкой по id.
+    """
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if start_date and end_date:
+        start_date = make_timezone_aware(start_date)
+        end_date = make_timezone_aware(end_date)
+        if start_date > end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_date must be less than or equal to end_date",
+            )
+
+    transactions = await get_filtered_transactions_grouped(
+        session=session,
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    return transactions
+
+
 @router.get("/{transaction_id}", response_model=TransactionBase)
 async def get_transaction_by_id(
         transaction_id: Annotated[int, Path()],
@@ -225,148 +367,6 @@ async def delete_transaction_by_id_custom_user_id(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can't delete this transaction")
 
     await delete_transaction(session=session, transaction=transaction)
-
-
-@router.get("/filter", response_model=list[TransactionBase])
-async def get_filtered_transactions_api(
-    current_user: user_dependency,
-    order_by: str = Query(default="asc", regex="^(asc|desc)$"),
-    limit: Optional[int] = Query(default=None, ge=0),
-    offset: Optional[int] = Query(default=None, ge=0),
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
-    session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[TransactionBase]:
-    """
-        Получение списка транзакций с фильтрацией и сортировкой.
-    """
-    if start_date and end_date:
-        start_date = make_timezone_aware(start_date)
-        end_date = make_timezone_aware(end_date)
-        if start_date > end_date:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_date must be less than or equal to end_date",
-            )
-
-    transactions = await get_filtered_transactions(
-        session=session,
-        user_id=current_user.id,
-        order_by=order_by,
-        limit=limit,
-        offset=offset,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    return transactions
-
-
-@router.get("/group", response_model=list[tuple[str, int]])
-async def get_filtered_transactions_grouped_api(
-    current_user: user_dependency,
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
-    session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, int]]:
-    """
-    Получение списка транзакций с фильтрацией и группировкой по id.
-    """
-    if start_date and end_date:
-        start_date = make_timezone_aware(start_date)
-        end_date = make_timezone_aware(end_date)
-        if start_date > end_date:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_date must be less than or equal to end_date",
-            )
-
-    transactions = await get_filtered_transactions_grouped(
-        session=session,
-        user_id=current_user.id,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    return transactions
-
-
-@router.get("/filter/{user_id}", response_model=list[TransactionBase])
-async def get_filtered_transactions_api_custom_user_id(
-    user_id: Annotated[int, Path()],
-    order_by: str = Query(default="asc", regex="^(asc|desc)$"),
-    limit: Optional[int] = Query(default=None, ge=0),
-    offset: Optional[int] = Query(default=None, ge=0),
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
-    session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[TransactionBase]:
-    """
-        Получение списка транзакций с фильтрацией и сортировкой.
-    """
-    stmt = (select(User)
-            .options(selectinload(User.transactions))
-            .options(selectinload(User.categories))
-            .options(selectinload(User.advices))
-            .where(User.id == user_id))
-    user_exists = (await session.execute(stmt)).scalar_one_or_none()
-    if user_exists is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    if start_date and end_date:
-        start_date = make_timezone_aware(start_date)
-        end_date = make_timezone_aware(end_date)
-        if start_date > end_date:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_date must be less than or equal to end_date",
-            )
-
-    transactions = await get_filtered_transactions(
-        session=session,
-        user_id=user_id,
-        order_by=order_by,
-        limit=limit,
-        offset=offset,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    return transactions
-
-
-@router.get("/group/{user_id}", response_model=list[tuple[str, int]])
-async def get_filtered_transactions_grouped_api_custom_user_id(
-    user_id: Annotated[int, Path()],
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
-    session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, int]]:
-    """
-    Получение списка транзакций с фильтрацией и группировкой по id.
-    """
-    stmt = (select(User)
-            .options(selectinload(User.transactions))
-            .options(selectinload(User.categories))
-            .options(selectinload(User.advices))
-            .where(User.id == user_id))
-    user_exists = (await session.execute(stmt)).scalar_one_or_none()
-    if user_exists is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    if start_date and end_date:
-        start_date = make_timezone_aware(start_date)
-        end_date = make_timezone_aware(end_date)
-        if start_date > end_date:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="start_date must be less than or equal to end_date",
-            )
-
-    transactions = await get_filtered_transactions_grouped(
-        session=session,
-        user_id=user_id,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    return transactions
 
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED,
