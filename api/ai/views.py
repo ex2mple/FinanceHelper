@@ -75,7 +75,7 @@ async def ask_agent_advice(
     reversed_categories = {v: k for k, v in categories.items()}
     params = {}
     for category in res:
-        title, summ = category
+        title, color, summ = category
         title_int = convert_category_to_numeric(title)
         title = 'expense_' + CATEGORY_NAMES[title_int]
         if title not in params:
@@ -113,6 +113,7 @@ async def ask_agent_advice(
         agent_id = settings.mistral_large_agent_id
 
         client = Mistral(api_key=settings.mistral_api_key)
+        print(f'Запрос: {request.request + text}')
         chat_response = await client.agents.complete_async(
             agent_id=agent_id,
             messages=[
@@ -156,7 +157,7 @@ async def ask_agent_advice(
     reversed_categories = {v: k for k, v in categories.items()}
     params = {}
     for category in res:
-        title, summ = category
+        title, color, summ = category
         title_int = convert_category_to_numeric(title)
         title = 'expense_' + CATEGORY_NAMES[title_int]
         if title not in params:
@@ -194,6 +195,7 @@ async def ask_agent_advice(
         agent_id = settings.mistral_large_agent_id
 
         client = Mistral(api_key=settings.mistral_api_key)
+        print(f'Запрос: {request.request + text}')
         chat_response = await client.agents.complete_async(
             agent_id=agent_id,
             messages=[
