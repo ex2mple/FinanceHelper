@@ -113,9 +113,7 @@
 <script setup>
 import {ref, computed} from 'vue';
 import Dropdown from 'primevue/dropdown';
-import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
 import Card from 'primevue/card';
 import instance from "~/axiosinstance";
 
@@ -141,60 +139,6 @@ const monthOptions = ref([
   {label: 'Все месяцы', value: null}, // Опция для сброса фильтра
 ]);
 
-// Пример данных транзакций (ЗАМЕНИТЕ НА ВАШИ)
-// const allTransactions = ref([
-//   {
-//     id: 1,
-//     date: '2024-04-11',
-//     name: 'О!Эскимо',
-//     category: 'Супермаркеты',
-//     amount: -120,
-//     details: 'Основной счет Tinkoff',
-//     iconUrl: 'https://via.placeholder.com/40/E91E63/FFFFFF?text=O'
-//   },
-//   {
-//     id: 1,
-//     date: '2024-04-11',
-//     name: 'О!Эскимо',
-//     category: 'Супермаркеты',
-//     amount: -120,
-//     details: 'Основной счет Tinkoff',
-//     iconUrl: 'https://via.placeholder.com/40/E91E63/FFFFFF?text=O'
-//   },
-//   {id: 2, date: '2024-04-11', name: 'Арсений Д.', category: 'Переводы', amount: 14000, details: 'MasterCard'},
-//   {id: 3, date: '2024-04-11', name: 'Стрелка', category: 'Транспорт', amount: -72, details: 'Компенсация'},
-//   {
-//     id: 4,
-//     date: '2024-04-09',
-//     name: 'Вкусно — и точка',
-//     category: 'Фастфуд',
-//     amount: -280,
-//     details: 'Основная',
-//     bonus: 2,
-//     iconUrl: 'https://via.placeholder.com/40/FF9800/FFFFFF?text=V'
-//   },
-//   {id: 5, date: '2024-04-09', name: 'Стрелка', category: 'Транспорт', amount: -72, details: 'Компенсация'},
-//   {
-//     id: 6,
-//     date: '2024-04-09',
-//     name: 'Московский метрополитен',
-//     category: 'Местный транспорт',
-//     amount: -595,
-//     details: 'Основной счет Tinkoff'
-//   },
-//   {
-//     id: 7,
-//     date: '2024-04-07',
-//     name: 'Пятерочка',
-//     category: 'Супермаркеты',
-//     amount: -520,
-//     iconUrl: 'https://via.placeholder.com/40/4CAF50/FFFFFF?text=P'
-//   },
-//   {id: 8, date: '2024-04-07', name: 'Зарплата', category: 'Доходы', amount: 51300, details: 'ООО Ромашка'},
-//   {id: 9, date: '2024-03-25', name: 'Яндекс.Такси', category: 'Транспорт', amount: -350},
-//   {id: 10, date: '2024-03-15', name: 'Перевод маме', category: 'Переводы', amount: -5000},
-//
-// ]);
 const allTransactions = ref([]);
 
 onMounted(async () => {
@@ -263,9 +207,8 @@ const totalIncomeFormatted = computed(() => {
 
 // --- Логика кликабельности ---
 const onTransactionClick = (transaction) => {
-  console.log("Clicked transaction:", transaction);
-  // Здесь можно открыть модальное окно, перейти на другую страницу и т.д.
-  alert(`Клик по транзакции: ${transaction.title} (${formatAmount(transaction.amount)})`);
+  const router = useRouter()
+  router.push('/transactions/' + transaction.id);
 }
 
 // --- Фильтрация и Группировка ---
