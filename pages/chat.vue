@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
-import axiosInstance from '~/axiosInstance'
+import axiosInstance from '~/axiosinstance'
 
 interface Message {
   text: string
@@ -131,8 +131,8 @@ const sendMessage = async () => {
   
   try {
     // Make API request to the /ai/ask/large endpoint
-    const response = await axiosInstance.post('/ai/ask/large', {
-      content: userMessage.text  // Changed from 'message' to 'content'
+    const response = await axiosInstance.post('/ai/advice', {
+      request: userMessage.text  // Changed from 'message' to 'content'
     })
     
     // Replace loading message with actual response
