@@ -19,6 +19,8 @@ services:
     volumes:
       # Можно примонтировать код для разработки, чтобы изменения отражались без пересборки
        - .:/app # Раскомментируйте для разработки
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped # Политика перезапуска
 
   # Сервис для базы данных PostgreSQL

@@ -79,9 +79,9 @@ async def ask_agent_advice(
         title_int = convert_category_to_numeric(title)
         title = 'expense_' + CATEGORY_NAMES[title_int]
         if title not in params:
-            params[title] = summ
+            params[title] = abs(summ)
         else:
-            params[title] += summ
+            params[title] += abs(summ)
     params['age'] = current_user.age
     params['gender'] = current_user.gender[0]
     params['income'] = current_user.salary
@@ -92,8 +92,9 @@ async def ask_agent_advice(
             f"Вот информация о моих реальных и предсказанных тратах по категориям:\n")
     http_session = aiohttp.ClientSession()
     try:
-        async with http_session.get('127.0.0.1:8080/overspending', params=params) as resp:
+        async with http_session.get('http://host.docker.internal:8080/overspending', params=params) as resp:
             data = await resp.json()
+            print(data)
             overspending_categories = data['overspending_categories']
             for cat in overspending_categories:
                 cat_int = reversed_CATEGORY_NAMES[cat]
@@ -134,7 +135,7 @@ async def ask_agent_advice(
 
 
 @router.post("/advice/user/{user_id}", response_model=MessageResponse)
-async def ask_agent_advice(
+async def ask_agent_advice_user_id(
     user_id: Annotated[int, Path()],
     request: Annotated[MessageRequest, Body()],
     session: AsyncSession = Depends(db_helper.session_dependency)
@@ -161,9 +162,9 @@ async def ask_agent_advice(
         title_int = convert_category_to_numeric(title)
         title = 'expense_' + CATEGORY_NAMES[title_int]
         if title not in params:
-            params[title] = summ
+            params[title] = abs(summ)
         else:
-            params[title] += summ
+            params[title] += abs(summ)
     params['age'] = user_exists.age
     params['gender'] = user_exists.gender[0]
     params['income'] = user_exists.salary
@@ -174,8 +175,9 @@ async def ask_agent_advice(
             f"Вот информация о моих реальных и предсказанных тратах по категориям:\n")
     http_session = aiohttp.ClientSession()
     try:
-        async with http_session.get('127.0.0.1:8080/overspending', params=params) as resp:
+        async with http_session.get('http://host.docker.internal:8080/overspending', params=params) as resp:
             data = await resp.json()
+            print(data)
             overspending_categories = data['overspending_categories']
             for cat in overspending_categories:
                 cat_int = reversed_CATEGORY_NAMES[cat]
