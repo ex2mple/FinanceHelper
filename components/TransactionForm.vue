@@ -132,16 +132,6 @@
 
             <!-- Кнопки -->
             <div class="col-12 mt-3 grid grid-cols-1 gap-2">
-              <!-- Кнопка сканирования чека -->
-              <Button
-                  type="button"
-                  icon="pi pi-camera"
-                  label="Сканировать чек"
-                  severity="secondary"
-                  outlined
-                  class="w-full mb-2"
-                  @click="$router.push('/scan')"
-              />
 
               <!-- Кнопка сохранения -->
               <Button

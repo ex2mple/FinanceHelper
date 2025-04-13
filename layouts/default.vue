@@ -74,7 +74,14 @@ const items = ref([
     icon: 'pi pi-tags',
     command: () => {
       return navigateTo('/category/list')
-    },
+    }
+  },
+  {
+    label: 'Графики',
+    icon: 'pi pi-tags',
+    command: () => {
+      return navigateTo('/stats')
+    }
   }
 ])
 
