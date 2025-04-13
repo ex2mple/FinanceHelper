@@ -191,7 +191,7 @@ async def get_filtered_transactions_api_custom_user_id(
     return transactions
 
 
-@router.get("/group", response_model=list[tuple[str, int]])
+@router.get("/group", response_model=list[tuple[str, str, int]])
 async def get_filtered_transactions_grouped_api(
     current_user: user_dependency,
     start_date: Optional[datetime.datetime] = None,
@@ -219,7 +219,7 @@ async def get_filtered_transactions_grouped_api(
     return transactions
 
 
-@router.get("/group/{user_id}", response_model=list[tuple[str, int]])
+@router.get("/group/{user_id}", response_model=list[tuple[str, str, int]])
 async def get_filtered_transactions_grouped_api_custom_user_id(
     user_id: Annotated[int, Path()],
     start_date: Optional[datetime.datetime] = None,
