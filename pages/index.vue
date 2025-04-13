@@ -1,5 +1,8 @@
 <template>
   <div class="p-4 min-h-screen font-sans">
+    <!-- Toast компонент для уведомлений -->
+    <Toast />
+    
     <!-- Верхняя панель: Месяц и Фильтры -->
     <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
       <div class="flex items-center gap-2">
@@ -11,6 +14,25 @@
             optionValue="value"
             placeholder="Выберите месяц"
             class="w-[150px] md:w-[180px]"
+        />
+        
+        <!-- Кнопка для загрузки CSV файла -->
+        <Button 
+          icon="pi pi-upload" 
+          label="Импорт CSV" 
+          severity="secondary" 
+          outlined
+          @click="openFileUpload"
+          class="ml-2"
+        />
+        
+        <!-- Скрытый инпут для выбора файла -->
+        <input 
+          type="file" 
+          ref="fileUploader" 
+          accept=".csv" 
+          class="hidden" 
+          @change="handleFileUpload"
         />
       </div>
     </div>
@@ -111,16 +133,18 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue';
 import Dropdown from 'primevue/dropdown';
 import Avatar from 'primevue/avatar';
 import Card from 'primevue/card';
-import instance from "~/axiosinstance";
+import Toast from 'primevue/toast';
+import instance from "~/axiosInstance";
+import { useToast } from 'primevue/usetoast';
 
 // --- Данные ---
 // Получаем текущий месяц (0-11)
 const currentMonth = new Date().getMonth();
 const selectedMonth = ref(currentMonth); // Выбранный месяц по умолчанию - текущий
+const toast = useToast();
 
 // Опции для выбора месяца
 const monthOptions = ref([
@@ -246,6 +270,50 @@ const groupedTransactions = computed(() => {
   return groups;
 });
 
+// --- Загрузка CSV ---
+const fileUploader = ref(null);
+
+const openFileUpload = () => {
+  fileUploader.value.click();
+};
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  console.log(file)
+  if (!file) return;
+
+  // Создаем FormData для отправки файла
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    toast.add({ severity: 'info', summary: 'Загрузка', detail: 'Загрузка файла...', life: 3000 });
+    
+    // Отправляем файл на сервер
+    const response = await instance.post('/transactions/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    // Обновляем список транзакций после успешной загрузки
+    allTransactions.value = (await instance.get('/transactions/my')).data;
+    
+    // Показываем уведомление об успехе
+    toast.add({ severity: 'success', summary: 'Успешно', detail: 'Файл успешно загружен и данные обновлены', life: 3000 });
+    
+    // Сбрасываем input файла
+    event.target.value = '';
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Ошибка', 
+      detail: `Ошибка при загрузке файла: ${error.response?.data?.message || error.message}`, 
+      life: 5000 
+    });
+  }
+};
 </script>
 
 <style>
