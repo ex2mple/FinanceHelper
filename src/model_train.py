@@ -77,7 +77,6 @@ class Model():
             eval_loss = self.models[cat].evaluate(X_test, y_test, verbose=0)
             print(f"  MAE для категории {cat_name}: {int(eval_loss[1])}")
 
-
     def predict(self, input_data):
         gender, age, income = input_data[0]
 
@@ -87,7 +86,10 @@ class Model():
         for cat in range(MAX_CATEGORY_INDEX + 1):
             if cat in self.models:
                 prediction = self.models[cat].predict(norm_input, verbose=0)
-                all_predictions.append(prediction[0][0])
+                if prediction[0][0] < 0:
+                    all_predictions.append(0)
+                else:
+                    all_predictions.append(prediction[0][0])
             else:
                 all_predictions.append(0)
 

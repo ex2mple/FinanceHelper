@@ -142,7 +142,7 @@ def preprocess_data(
 
     spending_columns = list(CATEGORY_NAMES.values())
     users = users[(users[spending_columns] <= 200_000).all(axis=1)]
-    users = users[(users['monthly_income_amt'] <= 2500) & (users['age'] <= 80)]
+    users = users[(users['monthly_income_amt'] <= 3000) & (users['age'] <= 80)]
 
     users.to_csv('../data/users_processed.csv', index=False, sep=',')
 

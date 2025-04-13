@@ -130,6 +130,6 @@ def get_overspending(
         diff = actual_expenses[idx] - predicted_expenses[idx]
         print(f"{category} -> Реальные траты: {actual_expenses[idx]}, Ожидаемые траты: {predicted_expenses[idx]}")
         if diff > 0:
-            overspending[category] = (actual_expenses[idx], predicted_expenses[idx])
+            overspending[category] = (int(float(actual_expenses[idx])), int(float(predicted_expenses[idx])))
 
     return {"overspending_categories": overspending}
