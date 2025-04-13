@@ -107,9 +107,8 @@
         
         try {
           // Отправляем данные на обработку AI
-          const aiResponse = await instance.post<AIResponse>('/ai/small', {
-            items: checkData.items,
-            retailPlace: checkData.retailPlace
+          const aiResponse = await instance.post<AIResponse>('/ai/ask?model=small', {
+            request: `${checkData.items.map(item => item.name).join(', ')}, ${checkData.retailPlace}`,
           });
           
           if (aiResponse.data) {

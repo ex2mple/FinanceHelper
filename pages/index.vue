@@ -234,9 +234,14 @@ watch(selectedMonth, (newMonth) => {
 });
 
 const formatAmount = (amount) => {
-  const sign = amount > 0 ? '+' : '-';
+  const sign = amount >= 0 ? '+' : '-';
   const formatted = Math.abs(amount).toLocaleString('ru-RU');
   return `${sign}${formatted} ₽`;
+};
+
+const formatExpenseAmount = (amount) => {
+  const formatted = Math.abs(amount).toLocaleString('ru-RU');
+  return `-${formatted} ₽`;
 };
 
 const formatDateGroup = (dateString) => {

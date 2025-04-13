@@ -79,7 +79,7 @@ const items = ref([
 ])
 
 const logout = () => {
-  navigateTo('/auth/login')
+  navigateTo('/login')
 }
 </script>
 
