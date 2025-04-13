@@ -90,9 +90,15 @@ const formatTime = (date: Date) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-const formatMessageText = (text: string) => {
+const formatMessageText = (text: string | any) => {
+  // Проверяем, что текст — это строка
+  if (typeof text !== 'string') {
+    console.warn('formatMessageText получил не строку:', text);
+    // Приводим к строке, если это не строка
+    return String(text || '').replace(/\n/g, '<br>');
+  }
   // Convert line breaks to <br> tags
-  return text.replace(/\n/g, '<br>')
+  return text.replace(/\n/g, '<br>');
 }
 
 const scrollToBottom = async () => {
@@ -145,9 +151,33 @@ const sendMessage = async () => {
     
     console.log('Ответ от сервера:', response.data)
     
-    // Создаем новое сообщение вместо попытки обновить существующее
+    // Извлекаем текст ответа в зависимости от формата ответа
+    let responseText = '';
+    
+    if (typeof response.data === 'string') {
+      responseText = response.data;
+    } else if (response.data && typeof response.data === 'object') {
+      // Проверяем разные возможные поля с ответом
+      if (response.data.response) {
+        responseText = response.data.response;
+      } else if (response.data.text) {
+        responseText = response.data.text;
+      } else if (response.data.message) {
+        responseText = response.data.message;
+      } else {
+        // Если не смогли найти текст, преобразуем объект в строку
+        responseText = JSON.stringify(response.data);
+      }
+    } else {
+      // Если другой тип данных, преобразуем в строку
+      responseText = String(response.data || '');
+    }
+    
+    console.log('Извлеченный текст ответа:', responseText);
+    
+    // Создаем новое сообщение с извлеченным текстом
     const aiResponse: Message = {
-      text: response.data,
+      text: responseText || 'Получен пустой ответ',
       isUser: false,
       timestamp: new Date(),
       isLoading: false
@@ -159,12 +189,12 @@ const sendMessage = async () => {
     
     if (loadingIndex !== -1) {
       messagesCopy.splice(loadingIndex, 1, aiResponse)
-      messages.value = messagesCopy
+      messages.value = [...messagesCopy] // Создаем новый массив для гарантии реактивности
       console.log('Сообщение с ответом добавлено, индикатор загрузки удален')
     } else {
       console.warn('Не удалось найти сообщение с загрузкой')
       // На случай, если сообщение с загрузкой не найдено, просто добавим новое
-      messages.value.push(aiResponse)
+      messages.value = [...messages.value, aiResponse]
     }
   } catch (err: any) {
     console.error('Ошибка запроса:', err)
@@ -178,7 +208,7 @@ const sendMessage = async () => {
     
     if (loadingIndex !== -1) {
       messagesCopy.splice(loadingIndex, 1)
-      messages.value = messagesCopy
+      messages.value = [...messagesCopy] // Создаем новый массив для гарантии реактивности
     }
   } finally {
     isLoading.value = false
