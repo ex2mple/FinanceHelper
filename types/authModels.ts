@@ -12,7 +12,7 @@ export const createUserSchema = yup.object({
   username: yup.string().required(requiredError).max(50, 'Слишком длинный никнейм'),
   gender: yup.string().oneOf(['Male', 'Female']).required(requiredError),
   age: yup.number().positive('Должно быть больше 13').required(requiredError).min(14, 'Возраст должен быть больше 13'),
-  salary: yup.number().positive('Должно быть больше 0').required(requiredError).min(1, 'Зарплата должна быть больше 0').max(100000000, 'Слишком большая зарплата'),
+  salary: yup.number().positive('Должно быть больше 0').required(requiredError).min(1, 'Зарплата должна быть больше 0').max(3000, 'Слишком большая зарплата'),
 })
 
 export const loginUserSchema = yup.object({

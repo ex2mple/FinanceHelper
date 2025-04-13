@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import {createUserSchema, type CreateUser} from '~/types/authModels'
 import {yupResolver} from '@primevue/forms/resolvers/yup'
-import {useToast} from '#imports'
+import {useToast} from 'primevue/usetoast'
 import instance from '~/axiosinstance'
-
-definePageMeta({
-  requireAuth: false,
-  layout: false,
-})
 
 const resolver = yupResolver(createUserSchema)
 const toast = useToast()
