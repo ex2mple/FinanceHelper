@@ -197,7 +197,7 @@ async def get_filtered_transactions_grouped_api(
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, int]]:
+) -> list[tuple[str, str, int]]:
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
@@ -225,7 +225,7 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     session: AsyncSession = Depends(db_helper.session_dependency),
-) -> list[tuple[str, int]]:
+) -> list[tuple[str, str, int]]:
     """
     Получение списка транзакций с фильтрацией и группировкой по id.
     """
