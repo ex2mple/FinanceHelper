@@ -1,15 +1,18 @@
 import datetime
 from typing import Annotated, Literal, Optional
 
-from fastapi import APIRouter, HTTPException, Body, Depends, Path
+from fastapi import APIRouter, HTTPException, Body, Depends, Path, status
 
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from api.auth.views import user_dependency
 from api.transactions.crud import get_filtered_transactions_grouped
+from api.utils.system import default_categories, convert_category_to_numeric, CATEGORY_NAMES
 from core.config import settings
-from core.models import db_helper
+from core.models import db_helper, User
 
 import aiohttp
 
@@ -70,15 +73,49 @@ async def ask_agent_advice(
     return MessageResponse(response='ok')
 
 
-@router.get("/advice/user/{user_id}", response_model=MessageResponse)
+@router.post("/advice/user/{user_id}", response_model=MessageResponse)
 async def ask_agent_advice(
     user_id: Annotated[int, Path()],
-    start_date: Optional[datetime.datetime] = None,
-    end_date: Optional[datetime.datetime] = None,
+    request: Annotated[MessageRequest, Body()],
     session: AsyncSession = Depends(db_helper.session_dependency)
 ) -> MessageResponse:
+    stmt = (select(User)
+            .options(selectinload(User.transactions))
+            .options(selectinload(User.categories))
+            .options(selectinload(User.advices))
+            .where(User.id == user_id))
+    user_exists = (await session.execute(stmt)).scalar_one_or_none()
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    today = datetime.datetime.now()
+    last_month = today - datetime.timedelta(days=30)
     res = await get_filtered_transactions_grouped(session=session, user_id=user_id,
-                                                  start_date=start_date, end_date=end_date)
-    # TODO: Здесь нужно отдать результат в эндпоинт с моделями и получить от них ответ
-    aiohttp.ClientSession()
+                                                  start_date=last_month, end_date=today)
+    params = {}
+    for category in res:
+        title, summ = category
+        title_int = convert_category_to_numeric(title)
+        title = 'expense_' + CATEGORY_NAMES[title_int]
+        if title not in params:
+            params[title] = summ
+        else:
+            params[title] += summ
+    params['age'] = user_exists.age
+    params['gender'] = user_exists.gender[0]
+    params['income'] = user_exists.salary
+
+    text = (f"\n\nМой возраст: {params['age']} лет\n"
+            f"Мой пол: {params['gender']}\n"
+            f"Моя зарплата: {params['income']}\n"
+            f"Вот информация о моих реальных и предсказанных тратах по категориям:\n")
+    http_session = aiohttp.ClientSession()
+    try:
+        async with http_session.get('127.0.0.1:8080/overspending', params=params) as resp:
+            data = await resp.json()
+            overspending_categories = data['overspending_categories']
+            text = 2
+            return data
+    finally:
+        await http_session.close()
     return MessageResponse(response='ok')

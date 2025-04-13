@@ -451,9 +451,8 @@ async def upload_transaction_in_csv(
                 if category_name in category_cache:
                     category_id = category_cache[category_name]
                 else:
-                    # Ищем категорию по имени (используя LIKE для нечеткого поиска)
                     stmt = (select(Category)
-                            .filter(Category.name.ilike(f"%{category_name}%"),
+                            .filter(Category.name == category_name,
                                     or_(Category.user_id == current_user.id, Category.user_id == -1)))
                     category = (await session.execute(stmt)).scalar_one_or_none()
 
