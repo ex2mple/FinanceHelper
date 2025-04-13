@@ -49,7 +49,7 @@ class TransactionSelfUpdate(BaseModel):
         return make_timezone_aware(dt)
 
 
-class TransactionCSVUpload(BaseModel):
-    created_transactions_count: int
-    errors: list[str]
-    transactions: list[TransactionBase]
+# class TransactionCSVUpload(BaseModel):
+#     created_transactions_count: int
+#     errors: list[str]
+#     transactions: list[TransactionBase]

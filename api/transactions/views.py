@@ -7,7 +7,7 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate, TransactionCSVUpload
+from .schemas import TransactionCreate, TransactionBase, TransactionSelfUpdate
 from .crud import create_transaction, get_user_transactions, get_transaction, update_transaction, delete_transaction, \
     get_filtered_transactions, get_filtered_transactions_grouped
 from core.models import db_helper, User, Category
@@ -15,7 +15,8 @@ from typing import Optional, Annotated
 
 from ..auth.views import user_dependency
 from ..categories.crud import create_category
-from ..categories.schemas import CategoryCreate
+from ..categories.schemas import CategoryCreate, CategoryBase
+from ..users.schemas import UserBase
 from ..utils.datetime_utils import make_timezone_aware
 
 from io import StringIO
@@ -369,12 +370,12 @@ async def get_filtered_transactions_grouped_api_custom_user_id(
 
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED,
-             response_model=TransactionCSVUpload)
+             response_model=list[TransactionBase])
 async def upload_transaction_in_csv(
     current_user: user_dependency,
     file: UploadFile = File(...),
     session: AsyncSession = Depends(db_helper.session_dependency),
-) -> TransactionCSVUpload:
+) -> list[TransactionBase]:
     """Загрузка новых транзакций из CSV-файла для авторизованного пользователя"""
     try:
         if not file.filename.endswith('.csv'):
@@ -409,7 +410,6 @@ async def upload_transaction_in_csv(
         csv_reader = csv.DictReader(StringIO(contents), delimiter=';')
 
         created_transactions = []
-        errors = []
         category_cache = {}  # Кэш для категорий
 
         for row_num, row in enumerate(csv_reader, start=1):
@@ -422,7 +422,7 @@ async def upload_transaction_in_csv(
 
                 # Проверяем обязательные поля
                 if not transaction_type or not date_str or not amount_str:
-                    errors.append(f"Строка {row_num}: отсутствуют обязательные поля")
+                    print(f"Строка {row_num}: отсутствуют обязательные поля")
                     continue
 
                 # Преобразование категории
@@ -434,7 +434,7 @@ async def upload_transaction_in_csv(
                     datetime_obj = datetime.datetime.strptime(date_str, '%d.%m.%Y %H:%M')
                     datetime_obj = make_timezone_aware(datetime_obj)
                 except ValueError:
-                    errors.append(f"Строка {row_num}: неверный формат даты '{date_str}'")
+                    print(f"Строка {row_num}: неверный формат даты '{date_str}'")
                     continue
 
                 # Преобразование суммы
@@ -444,7 +444,7 @@ async def upload_transaction_in_csv(
                     if transaction_type in expense_transaction_types:
                         amount = -abs(amount)
                 except ValueError:
-                    errors.append(f"Строка {row_num}: неверный формат суммы '{amount_str}'")
+                    print(f"Строка {row_num}: неверный формат суммы '{amount_str}'")
                     continue
 
                 # Находим или создаем категорию
@@ -466,6 +466,9 @@ async def upload_transaction_in_csv(
                             category_in=category_in,
                             user_id=current_user.id
                         )
+                        session.add(category)
+                        await session.commit()
+                        await session.refresh(category, ["transactions", "user"])
 
                     category_id = category.id
                     category_cache[category_name] = category_id
@@ -486,13 +489,16 @@ async def upload_transaction_in_csv(
                     transaction_in=transaction_in,
                     user_id=current_user.id
                 )
+                session.add(transaction)
+                await session.commit()
+                await session.refresh(transaction, ["category", "user"])
+
                 created_transactions.append(transaction)
 
             except Exception as e:
-                errors.append(f"Строка {row_num}: {str(e)}")
+                print(f"Строка {row_num}: {str(e)}")
 
-        return TransactionCSVUpload(created_transactions_count=len(created_transactions), errors=errors,
-                                    transactions=created_transactions)
+        return created_transactions
 
     except Exception as e:
         raise HTTPException(
