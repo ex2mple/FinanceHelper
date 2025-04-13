@@ -42,8 +42,8 @@ async def get_user_transactions(session: AsyncSession, user_id: int,
 
 async def get_transaction(session: AsyncSession, transaction_id: int) -> Transaction:
     stmt = (select(Transaction)
-            .options(selectinload(Transaction.category).selectinload(Category.user))
-            .options(selectinload(Transaction.user))
+            .options(selectinload(Transaction.category),
+                     selectinload(Transaction.user))
             .where(Transaction.id == transaction_id))
     transaction = (await session.execute(stmt)).scalar_one_or_none()
     return transaction

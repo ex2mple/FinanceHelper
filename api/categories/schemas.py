@@ -9,7 +9,7 @@ class CategoryBase(BaseModel):
     user_id: int
     name: Annotated[str, Field(..., min_length=3, max_length=50)]
     color: Annotated[str, Field(...)]
-    user: UserBase
+    # user: UserBase
 
 
 class CategoryCreate(BaseModel):
