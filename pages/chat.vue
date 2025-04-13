@@ -132,17 +132,19 @@ const sendMessage = async () => {
   try {
     // Make API request to the /ai/ask/large endpoint
     const response = await axiosInstance.post('/ai/advice', {
-      request: userMessage.text  // Changed from 'message' to 'content'
+      request: userMessage.text
     })
     
     // Replace loading message with actual response
     const loadingIndex = messages.value.findIndex(m => m.isLoading)
     if (loadingIndex !== -1) {
-      messages.value[loadingIndex] = {
+      // Полностью заменяем сообщение с индикатором загрузки на сообщение с ответом
+      messages.value.splice(loadingIndex, 1, {
         text: response.data,
         isUser: false,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+        isLoading: false // Явно указываем, что загрузка завершена
+      })
     }
   } catch (err: any) {
     // Handle error
