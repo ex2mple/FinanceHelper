@@ -6,18 +6,18 @@
           <i v-if="item.icon" :class="['mr-2', item.icon]"></i>
           <span>{{ item.label }}</span>
           <Badge
-            v-if="item.badge"
-            :class="{ 'ml-auto': !root, 'ml-2': root }"
-            :value="item.badge"
+              v-if="item.badge"
+              :class="{ 'ml-auto': !root, 'ml-2': root }"
+              :value="item.badge"
           />
           <span
-            v-if="item.shortcut"
-            class="border-surface bg-emphasis text-muted-color ml-auto rounded border p-1 text-xs"
-            >{{ item.shortcut }}</span
+              v-if="item.shortcut"
+              class="border-surface bg-emphasis text-muted-color ml-auto rounded border p-1 text-xs"
+          >{{ item.shortcut }}</span
           >
           <i
-            v-if="hasSubmenu"
-            :class="[
+              v-if="hasSubmenu"
+              :class="[
               'pi pi-angle-down ml-auto',
               { 'pi-angle-down': root, 'pi-angle-right': !root },
             ]"
@@ -30,23 +30,23 @@
             <i class="pi pi-comments text-lg"></i>
             <span class="ml-1">Советник</span>
           </NuxtLink>
-          <Button 
-            icon="pi pi-sign-out" 
-            class="p-button-rounded p-button-text p-button-danger" 
-            @click="logout" 
-            aria-label="Выйти"
-            tooltip="Выйти"
-            tooltipPosition="bottom"
+          <Button
+              icon="pi pi-sign-out"
+              class="p-button-rounded p-button-text p-button-danger"
+              @click="logout"
+              aria-label="Выйти"
+              tooltip="Выйти"
+              tooltipPosition="bottom"
           />
         </div>
       </template>
     </Menubar>
   </header>
-  <slot />
+  <slot/>
 </template>
 
 <script setup lang="ts">
-import { API } from '~/constants/Api'
+import {API} from '~/constants/Api'
 
 const items = ref([
   {
@@ -81,6 +81,13 @@ const items = ref([
     icon: 'pi pi-tags',
     command: () => {
       return navigateTo('/stats')
+    }
+  },
+  {
+    label: 'Профиль',
+    icon: 'pi pi-user',
+    command: () => {
+      return navigateTo('/profile')
     }
   }
 ])

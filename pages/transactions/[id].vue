@@ -152,11 +152,6 @@ const onEditClick = () => {
           <div class="text-4xl font-bold" :class="amountColorClass">
             {{ formattedAmount }}
           </div>
-
-          <!-- TODO: Можно добавить кнопку "Редактировать транзакцию" или другие детали -->
-          <!--
-          <Button label="Редактировать" icon="pi pi-pencil" class="p-button-outlined mt-6" @click="onEditClick" />
-          -->
         </div>
       </template>
     </Card>
