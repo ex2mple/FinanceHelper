@@ -31,6 +31,7 @@ async def startup_event():
     else:
         print("Нейросети успешно загружены!")
 
+
 class OverspendingResponse(BaseModel):
     overspending_categories: dict
 
@@ -43,7 +44,9 @@ def get_overspending(
         expense_other: float = Query(default=0, description="Фактические траты для категории other"),
         expense_supermarkets: float = Query(default=0, description="Фактические траты для категории supermarkets"),
         expense_restaurants: float = Query(default=0, description="Фактические траты для категории restaurants"),
+        expense_junk_food: float = Query(default=0, description="Фактические траты для категории junk_food"),
         expense_beauty: float = Query(default=0, description="Фактические траты для категории beauty"),
+        expense_cosmetics: float = Query(default=0, description="Фактические траты для категории cosmetics"),
         expense_home_repair: float = Query(default=0, description="Фактические траты для категории home_repair"),
         expense_electronics: float = Query(default=0, description="Фактические траты для категории electronics"),
         expense_auto_services: float = Query(default=0, description="Фактические траты для категории auto_services"),
@@ -51,11 +54,20 @@ def get_overspending(
         expense_pets: float = Query(default=0, description="Фактические траты для категории pets"),
         expense_clothing: float = Query(default=0, description="Фактические траты для категории clothing"),
         expense_transport: float = Query(default=0, description="Фактические траты для категории transport"),
+        expense_local_transport: float = Query(default=0,
+                                               description="Фактические траты для категории local transport"),
+        expense_train: float = Query(default=0, description="Фактические траты для категории train"),
+        expense_airplane: float = Query(default=0, description="Фактические траты для категории airplane"),
+        expense_taxi: float = Query(default=0, description="Фактические траты для категории taxi"),
         expense_medicine: float = Query(default=0, description="Фактические траты для категории medicine"),
         expense_digital_goods: float = Query(default=0, description="Фактические траты для категории digital_goods"),
         expense_entertainment: float = Query(default=0, description="Фактические траты для категории entertainment"),
+        expense_cinema: float = Query(default=0, description="Фактические траты для категории cinema"),
+        expense_online_cinema: float = Query(default=0, description="Фактические траты для категории online_cinema"),
         expense_stationery: float = Query(default=0, description="Фактические траты для категории stationery"),
         expense_travel: float = Query(default=0, description="Фактические траты для категории travel"),
+        expense_hotels: float = Query(default=0, description="Фактические траты для категории hotels"),
+        expense_souvenirs: float = Query(default=0, description="Фактические траты для категории souvenirs"),
         expense_fuel: float = Query(default=0, description="Фактические траты для категории fuel"),
         expense_pharmacies: float = Query(default=0, description="Фактические траты для категории pharmacies"),
         expense_sports_goods: float = Query(default=0, description="Фактические траты для категории sports_goods"),
@@ -74,12 +86,13 @@ def get_overspending(
     input_data = [[gender_numeric, age, income]]
     predicted_expenses = model.predict(input_data)[0]
 
-
     actual_expenses = [
         expense_other,
         expense_supermarkets,
         expense_restaurants,
+        expense_junk_food,
         expense_beauty,
+        expense_cosmetics,
         expense_home_repair,
         expense_electronics,
         expense_auto_services,
@@ -87,11 +100,19 @@ def get_overspending(
         expense_pets,
         expense_clothing,
         expense_transport,
+        expense_local_transport,
+        expense_train,
+        expense_airplane,
+        expense_taxi,
         expense_medicine,
         expense_digital_goods,
         expense_entertainment,
+        expense_cinema,
+        expense_online_cinema,
         expense_stationery,
         expense_travel,
+        expense_hotels,
+        expense_souvenirs,
         expense_fuel,
         expense_pharmacies,
         expense_sports_goods,
