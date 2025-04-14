@@ -6,9 +6,9 @@ class Settings(BaseSettings):
     DB_ECHO: bool = False
     api_v1_prefix: str = "/api/v1"
     SQUARE_SIZE: int = 256
-    mistral_api_key: str = "20vEo5bCNAvcJznBwpJ7Py0i53ngdy3X"
-    mistral_large_agent_id: str = "ag:5fe02e86:20250411:untitled-agent:6d9da368"
-    mistral_small_agent_id: str = "ag:5fe02e86:20250412:small:a89db457"
+    mistral_api_key: str
+    mistral_large_agent_id: str
+    mistral_small_agent_id: str
 
     class Config:
         env_file = ".env"
