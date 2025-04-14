@@ -38,6 +38,7 @@
               tooltip="Выйти"
               tooltipPosition="bottom"
           />
+
         </div>
       </template>
     </Menubar>
@@ -47,6 +48,7 @@
 
 <script setup lang="ts">
 import {API} from '~/constants/Api'
+import instance from "~/axiosinstance";
 
 const items = ref([
   {
@@ -93,6 +95,7 @@ const items = ref([
 ])
 
 const logout = () => {
+  instance.get('/auth/logout')
   navigateTo('/login')
 }
 </script>
