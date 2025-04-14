@@ -1,4 +1,8 @@
+from typing import Any, Coroutine
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.responses import JSONResponse
+
 from api.users import schemas, crud
 from core.models import db_helper, User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,5 +50,6 @@ async def get_user(
 async def delete_user(
         current_user: user_dependency,
         session: AsyncSession = Depends(db_helper.session_dependency),
-) -> None:
+) -> JSONResponse:
     await crud.delete_user(session=session, user=current_user)
+    return JSONResponse(status_code=status.HTTP_200_OK)

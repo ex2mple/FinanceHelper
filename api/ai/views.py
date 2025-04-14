@@ -92,9 +92,8 @@ async def ask_agent_advice(
             f"Вот информация о моих реальных и предсказанных тратах по категориям:\n")
     http_session = aiohttp.ClientSession()
     try:
-        async with http_session.get('http://host.docker.internal:8080/overspending', params=params) as resp:
+        async with http_session.get('http://ai:8080/overspending', params=params) as resp:
             data = await resp.json()
-            print(data)
             overspending_categories = data['overspending_categories']
             for cat in overspending_categories:
                 cat_int = reversed_CATEGORY_NAMES[cat]
@@ -114,7 +113,6 @@ async def ask_agent_advice(
         agent_id = settings.mistral_large_agent_id
 
         client = Mistral(api_key=settings.mistral_api_key)
-        print(f'Запрос: {request.request + text}')
         chat_response = await client.agents.complete_async(
             agent_id=agent_id,
             messages=[
@@ -175,9 +173,8 @@ async def ask_agent_advice_user_id(
             f"Вот информация о моих реальных и предсказанных тратах по категориям:\n")
     http_session = aiohttp.ClientSession()
     try:
-        async with http_session.get('http://host.docker.internal:8080/overspending', params=params) as resp:
+        async with http_session.get('http://ai:8080/overspending', params=params) as resp:
             data = await resp.json()
-            print(data)
             overspending_categories = data['overspending_categories']
             for cat in overspending_categories:
                 cat_int = reversed_CATEGORY_NAMES[cat]
@@ -197,7 +194,6 @@ async def ask_agent_advice_user_id(
         agent_id = settings.mistral_large_agent_id
 
         client = Mistral(api_key=settings.mistral_api_key)
-        print(f'Запрос: {request.request + text}')
         chat_response = await client.agents.complete_async(
             agent_id=agent_id,
             messages=[

@@ -70,11 +70,13 @@ async def self_update_user(
         user.salary = data.salary
     if data.password:
         user.password = get_password_hash(data.password)
+    if data.username:
+        user.username = data.username
     await session.commit()
     await session.refresh(user, ["transactions", "advices", "categories"])
     return user
 
 
 async def delete_user(session: AsyncSession, user: UserBase) -> None:
-    await session.delete(user)
+    # await session.delete(user)
     await session.commit()
